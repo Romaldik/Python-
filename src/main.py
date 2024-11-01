@@ -4,7 +4,7 @@ import sqlite3
 from __init__ import Team, Coach, Sponsor, Tournament, TeamMember, Staff, Player, TrainingProgram
 
 
-# SQLite database setup
+# Підключення до бд
 conn = sqlite3.connect('esports_manager.db')
 c = conn.cursor()
 
@@ -38,7 +38,7 @@ def main_window():
     root.geometry("900x900+500+100")
     
     def open_add_team_window():
-        root.withdraw()  # Hide main window
+        root.withdraw()  
         add_team_window(root)
     
     def open_add_tournament_window():
@@ -276,20 +276,16 @@ def show_teams():
         frame = tk.Frame(teams_window)
         frame.pack(pady=5)
         
-        # Відображення назви команди
         tk.Label(frame, text=f"Команда: {team[1]}").pack(side=tk.LEFT)
 
-        # Кнопка видалення команди
         delete_button = tk.Button(frame, text="Видалити", command=lambda t_id=team[0]: delete_team(t_id, teams_window))
         delete_button.pack(side=tk.RIGHT)
 
-        # Відображення гравців команди
         c.execute("SELECT * FROM players WHERE team_id = ?", (team[0],))
         players = c.fetchall()
         for player in players:
             tk.Label(frame, text=f"  Гравець: {player[1]}, Роль: {player[3]}").pack(side=tk.LEFT)
 
-        # Відображення персоналу команди
         c.execute("SELECT * FROM staff WHERE team_id = ?", (team[0],))
         staff = c.fetchall()
         for staff_member in staff:
@@ -298,19 +294,17 @@ def show_teams():
     tk.Button(teams_window, text="Повернутися на головну", command=teams_window.destroy).pack(pady=5)
 
 def delete_team(team_id, window):
-    # Видалення гравців команди
+   
     c.execute("DELETE FROM players WHERE team_id=?", (team_id,))
-    # Видалення персоналу команди
     c.execute("DELETE FROM staff WHERE team_id=?", (team_id,))
-    # Видалення команди
     c.execute("DELETE FROM teams WHERE id=?", (team_id,))
     conn.commit()
 
     messagebox.showinfo("Успіх", "Команду видалено успішно!")
-    window.destroy()  # Закриваємо вікно зі списком команд
-    show_teams()  # Поновлюємо список команд
+    window.destroy()  
+    show_teams()  
 
 if __name__ == "__main__":
     main_window()
-    conn.close()  # Закриття БД
+    conn.close()  
 
