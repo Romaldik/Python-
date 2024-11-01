@@ -1,5 +1,5 @@
 from abc import ABC, abstractmethod
-
+# абстрактний клас TeamMember
 class TeamMember(ABC):
     def __init__(self, name, age):
         self.name = name
