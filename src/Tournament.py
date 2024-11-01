@@ -1,5 +1,5 @@
 from Team import Team
-
+# клас Tournament турніри
 class Tournament:
     def __init__(self, name, prize_found):
         self.name = name
