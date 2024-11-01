@@ -13,3 +13,4 @@ class Staff(TeamMember):
 
     def __str__(self):
         return f"{self.position} {self.name}, {self.age} років"
+ 
