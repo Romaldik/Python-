@@ -2,6 +2,7 @@ from TeamMember import TeamMember
 from Player import Player
 from Coach import Coach
 from Staff import Staff
+# Класс Team команда
 class Team:
     def __init__(self, name):
         self.name = name
