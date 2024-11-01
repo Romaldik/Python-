@@ -1,4 +1,4 @@
-from Player import Player
+from __init__ import Player
 
 class TrainingProgram:
     def __init__(self, name, duration, focus_area):
