@@ -1,4 +1,5 @@
 from TeamMember import TeamMember 
+# підклас абстрактного класу TeamMember 
 class Player(TeamMember):
     def __init__(self, name, age, skills, role):
         super().__init__(name, age)
