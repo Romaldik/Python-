@@ -1,11 +1,8 @@
 import tkinter as tk
 from tkinter import messagebox
 import sqlite3
-from Team import Team
-from Player import Player
-from Coach import Coach
-from Staff import Staff
-from Sponsor import Sponsor
+from __init__ import Team, Coach, Sponsor, Tournament, TeamMember, Staff, Player, TrainingProgram
+
 
 # SQLite database setup
 conn = sqlite3.connect('esports_manager.db')
@@ -23,6 +20,13 @@ c.execute('''CREATE TABLE IF NOT EXISTS tournaments (
                 status TEXT,
                 start_date TEXT,
                 end_date TEXT)''')
+c.execute('''CREATE TABLE IF NOT EXISTS training_programs (
+                id INTEGER PRIMARY KEY,
+                name TEXT,
+                duration INTEGER,
+                focus_area TEXT,
+                team_id INTEGER,
+                FOREIGN KEY (team_id) REFERENCES teams(id))''')
 
 conn.commit()
 
@@ -30,6 +34,8 @@ conn.commit()
 def main_window():
     root = tk.Tk()
     root.title("Кіберспортивний менеджер")
+    
+    root.geometry("900x900+500+100")
     
     def open_add_team_window():
         root.withdraw()  # Hide main window
@@ -44,13 +50,15 @@ def main_window():
     tk.Button(root, text="Ближчі турніри", command=show_tournaments).pack(pady=5)
     tk.Button(root, text="Список команд та їх гравців", command=show_teams).pack(pady=5)
     tk.Button(root, text="Вихід", command=root.quit).pack(pady=5)
-
+    
     root.mainloop()
 
 # Додавання команли
 def add_team_window(root):
     add_window = tk.Toplevel(root)
     add_window.title("Додати команду")
+    
+    add_window.geometry("800x800+500+100")
     
     tk.Label(add_window, text="Назва команди").pack()
     entry_team_name = tk.Entry(add_window)
@@ -63,7 +71,6 @@ def add_team_window(root):
     players = []
     tk.Label(add_window, text="Учасники команди").pack()
 
-    # Create headers for the player details
     player_frame = tk.Frame(add_window)
     player_frame.pack()
     
@@ -85,7 +92,7 @@ def add_team_window(root):
 
     tk.Label(add_window, text="Персонал команди").pack()
 
-    staff_members = []  # List to hold staff input fields
+    staff_members = []  
 
     def add_staff_fields():
         frame = tk.Frame(add_window)
@@ -101,8 +108,22 @@ def add_team_window(root):
         
         staff_members.append((staff_name, staff_position))
 
-    # Button to add more staff fields
+    
     tk.Button(add_window, text="Додати ще персонал", command=add_staff_fields).pack(pady=5)
+
+    # Тренувальна програма
+    tk.Label(add_window, text="Тренувальна програма").pack()
+    tk.Label(add_window, text="Назва програми").pack()
+    entry_program_name = tk.Entry(add_window)
+    entry_program_name.pack()
+
+    tk.Label(add_window, text="Тривалість програми (днів)").pack()
+    entry_program_duration = tk.Entry(add_window)
+    entry_program_duration.pack()
+
+    tk.Label(add_window, text="Напрямок").pack()
+    entry_program_focus = tk.Entry(add_window)
+    entry_program_focus.pack()
 
     def save_team():
         team_name = entry_team_name.get()
@@ -112,11 +133,11 @@ def add_team_window(root):
             messagebox.showwarning("Помилка", "Введіть дані для команди та тренера.")
             return
         
-        # Додаємо команду до бази даних
+        # Додаємо команду до БД
         c.execute("INSERT INTO teams (name) VALUES (?)", (team_name,))
         team_id = c.lastrowid
 
-        # Додаємо гравців до бази даних
+        # Додаємо гравців до БД
         for player_name, player_role, player_level in players:
             if player_name.get() and player_role.get() and player_level.get():  # Ensure level is also checked
                 c.execute("INSERT INTO players (name, role, level, team_id) VALUES (?, ?, ?, ?)", 
@@ -127,17 +148,28 @@ def add_team_window(root):
             if staff_name.get() and staff_position.get():  # Ensure both fields are filled
                 c.execute("INSERT INTO staff (name, position, team_id) VALUES (?, ?, ?)", 
                           (staff_name.get(), staff_position.get(), team_id))
+        
+        program_name = entry_program_name.get()
+        program_duration = entry_program_duration.get()
+        program_focus = entry_program_focus.get()
+        if program_name and program_duration and program_focus:
+            try:
+                program_duration = int(program_duration)  # Перетворюємо тривалість на число
+                c.execute("INSERT INTO training_programs (name, duration, focus_area, team_id) VALUES (?, ?, ?, ?)",
+                          (program_name, program_duration, program_focus, team_id))
+                messagebox.showinfo("Успіх", "Тренувальна програма додана успішно!")
+            except ValueError:
+                messagebox.showwarning("Помилка", "Тривалість повинна бути числом.")
 
         conn.commit()
         messagebox.showinfo("Успіх", "Команда додана успішно!")
         add_window.destroy()
-        root.deiconify()  # Повернутись до головного вікна
+        root.deiconify() 
 
     tk.Button(add_window, text="Зберегти команду", command=save_team).pack(pady=5)
     tk.Button(add_window, text="Повернутися на головну", command=lambda: [add_window.destroy(), root.deiconify()]).pack(pady=5)
 
-    # Initial call to create staff fields
-    add_staff_fields()  # Start with one staff entry by default
+    add_staff_fields()  
 
 # Додавання турнірів
 def add_tournament_window(root):
@@ -205,7 +237,8 @@ def show_tournaments():
     tournament_window = tk.Toplevel()
     tournament_window.title("Ближчі турніри")
 
-    # Додавання турнірів
+    tournament_window.geometry("900x900+500+100")
+    
     tk.Button(tournament_window, text="Додати турнір", command=lambda: add_tournament_window(tournament_window)).pack(pady=5)
 
     c.execute("SELECT * FROM tournaments")
@@ -234,23 +267,48 @@ def show_teams():
     teams_window = tk.Toplevel()
     teams_window.title("Список команд та їх учасників")
 
+    teams_window.geometry("700x700+500+100")
+    
     c.execute("SELECT * FROM teams")
     teams = c.fetchall()
     
     for team in teams:
-        tk.Label(teams_window, text=f"Команда: {team[1]}").pack(pady=5)
+        frame = tk.Frame(teams_window)
+        frame.pack(pady=5)
+        
+        # Відображення назви команди
+        tk.Label(frame, text=f"Команда: {team[1]}").pack(side=tk.LEFT)
 
+        # Кнопка видалення команди
+        delete_button = tk.Button(frame, text="Видалити", command=lambda t_id=team[0]: delete_team(t_id, teams_window))
+        delete_button.pack(side=tk.RIGHT)
+
+        # Відображення гравців команди
         c.execute("SELECT * FROM players WHERE team_id = ?", (team[0],))
         players = c.fetchall()
         for player in players:
-            tk.Label(teams_window, text=f"  Гравець: {player[1]}, Роль: {player[3]}").pack(pady=2)
+            tk.Label(frame, text=f"  Гравець: {player[1]}, Роль: {player[3]}").pack(side=tk.LEFT)
 
+        # Відображення персоналу команди
         c.execute("SELECT * FROM staff WHERE team_id = ?", (team[0],))
         staff = c.fetchall()
         for staff_member in staff:
-            tk.Label(teams_window, text=f"  Персонал: {staff_member[1]}, Позиція: {staff_member[2]}").pack(pady=2)
-
+            tk.Label(frame, text=f"  Персонал: {staff_member[1]}, Позиція: {staff_member[2]}").pack(side=tk.LEFT)
+        
     tk.Button(teams_window, text="Повернутися на головну", command=teams_window.destroy).pack(pady=5)
+
+def delete_team(team_id, window):
+    # Видалення гравців команди
+    c.execute("DELETE FROM players WHERE team_id=?", (team_id,))
+    # Видалення персоналу команди
+    c.execute("DELETE FROM staff WHERE team_id=?", (team_id,))
+    # Видалення команди
+    c.execute("DELETE FROM teams WHERE id=?", (team_id,))
+    conn.commit()
+
+    messagebox.showinfo("Успіх", "Команду видалено успішно!")
+    window.destroy()  # Закриваємо вікно зі списком команд
+    show_teams()  # Поновлюємо список команд
 
 if __name__ == "__main__":
     main_window()

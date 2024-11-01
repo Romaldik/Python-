@@ -1,4 +1,5 @@
 from TeamMember import TeamMember
+# підклас абстрактного класу TeamMember
 
 class Staff(TeamMember):
     def __init__(self, name, age, position):
