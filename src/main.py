@@ -1,11 +1,8 @@
 import tkinter as tk
 from tkinter import messagebox
 import sqlite3
-from Team import Team
-from Player import Player
-from Coach import Coach
-from Staff import Staff
-from Sponsor import Sponsor
+from __init__ import Team, Coach, Sponsor, Tournament, TeamMember, Staff, Player, TrainingProgram
+
 
 # SQLite database setup
 conn = sqlite3.connect('esports_manager.db')
@@ -31,6 +28,8 @@ def main_window():
     root = tk.Tk()
     root.title("Кіберспортивний менеджер")
     
+    root.geometry("800x800+500+100")
+    
     def open_add_team_window():
         root.withdraw()  # Hide main window
         add_team_window(root)
@@ -44,13 +43,15 @@ def main_window():
     tk.Button(root, text="Ближчі турніри", command=show_tournaments).pack(pady=5)
     tk.Button(root, text="Список команд та їх гравців", command=show_teams).pack(pady=5)
     tk.Button(root, text="Вихід", command=root.quit).pack(pady=5)
-
+    
     root.mainloop()
 
 # Додавання команли
 def add_team_window(root):
     add_window = tk.Toplevel(root)
     add_window.title("Додати команду")
+    
+    add_window.geometry("700x700+500+100")
     
     tk.Label(add_window, text="Назва команди").pack()
     entry_team_name = tk.Entry(add_window)
@@ -205,7 +206,8 @@ def show_tournaments():
     tournament_window = tk.Toplevel()
     tournament_window.title("Ближчі турніри")
 
-    # Додавання турнірів
+    tournament_window.geometry("700x700+500+100")
+    
     tk.Button(tournament_window, text="Додати турнір", command=lambda: add_tournament_window(tournament_window)).pack(pady=5)
 
     c.execute("SELECT * FROM tournaments")
@@ -234,6 +236,8 @@ def show_teams():
     teams_window = tk.Toplevel()
     teams_window.title("Список команд та їх учасників")
 
+    teams_window.geometry("700x700+500+100")
+    
     c.execute("SELECT * FROM teams")
     teams = c.fetchall()
     
