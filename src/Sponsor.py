@@ -1,5 +1,5 @@
 from Team import Team
-
+# клас Sponsor спосор 
 class Sponsor:
     def __init__(self, name, offer):
         self.name = name
