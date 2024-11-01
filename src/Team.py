@@ -1,7 +1,5 @@
-from TeamMember import TeamMember
-from Player import Player
-from Coach import Coach
-from Staff import Staff
+from __init__ import TeamMember, Player, Coach, Staff
+
 # Класс Team команда
 class Team:
     def __init__(self, name):
