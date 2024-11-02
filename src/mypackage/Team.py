@@ -1,14 +1,12 @@
-from TeamMember import TeamMember
-from Player import Player
-from Coach import Coach
-from Staff import Staff
+from TeamMember import Player, Coach, Staff
+
 class Team:
     def __init__(self, name):
         self.name = name
         self.members = []
         self.sponsors = []
         self.training_programs = []
-    
+        
     def recruit_member(self, member):
         if isinstance(member, (Player, Coach, Staff)):
             self.members.append(member)
