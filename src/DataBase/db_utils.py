@@ -38,3 +38,28 @@ def execute_query(query, value):
             print(f"Error: {e}")
         finally:
             connection.close()
+
+
+class dbUtils:
+    def __init__(self, table_name, data) -> None:
+        self.table_name = table_name
+        self.data = data
+
+    def add_data(self,):
+        conn = create_connection()
+        if conn:
+            try:
+                with conn.cursor() as cursor:
+                    cursor.execute(f'SELECT * FROM {self.table_name} LIMIT 0;')
+                    column_names = [desc[0] for desc in cursor.description]
+
+                    columns = ', '.join(column_names)
+                    placeholders = ', '.join(['%s'] * len(column_names))
+                    insert_query = f"INSERT INTO {self.table_name} ({columns}) VALUES ({placeholders});"
+
+                    cursor.execute(insert_query, self.data)
+                    conn.commit()
+            except Exception as e:
+                print(f"Error: {e}")
+            finally:
+                conn.close()
