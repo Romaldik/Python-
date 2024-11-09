@@ -1,5 +1,3 @@
-from Team import Team
-
 class Tournament:
     def __init__(self, name, prize_found):
         self.name = name

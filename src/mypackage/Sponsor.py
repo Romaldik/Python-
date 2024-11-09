@@ -1,5 +1,3 @@
-from Team import Team
-
 class Sponsor:
     def __init__(self, name, offer):
         self.name = name

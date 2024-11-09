@@ -11,7 +11,7 @@ CREATE TABLE Team (
     name VARCHAR(255) NOT NULL,
     location VARCHAR(255) NOT NULL,
     training_program_id INT,
-    period_of_sponsorship VARCHAR(255),
+    period_of_sponsorship INTERVAL NOT NULL,
     FOREIGN KEY (training_program_id) REFERENCES TrainingProgram(id)
 );
 

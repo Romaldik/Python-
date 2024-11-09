@@ -1,4 +1,4 @@
-from TeamMember import Player, Coach, Staff
+
 
 class Team:
     def __init__(self, name):

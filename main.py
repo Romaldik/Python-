@@ -1,13 +1,10 @@
-from src.DataBase.db_utils import get_table_list 
+from src.mypackage.TeamMember import Player
 
 def main():
-    tables = get_table_list()
-    if tables:
-        print("Tables in the database:")
-        for table in tables:
-            print(table)
-    else:
-        print("No tables found or error in connection.")
+    a = Player("Aleksi", 'a', 21, 'Rdf', 'Navi')
+    #a.add_people()
+    #a.delete_people()
+    print(a.__str__())
 
 if __name__ == "__main__":
     main()

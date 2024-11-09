@@ -15,19 +15,6 @@ def get_table_list():
             connection.close()
     return []
 
-def select_query(query, value):    
-    connection = create_connection()
-    if connection:
-        try:
-            with connection.cursor() as cursor:
-                cursor.execute(query, value)
-                return cursor.fetchone()
-        except Exception as e:
-            print(f"Error: {e}")
-        finally:
-            connection.close()
-    return None
-
 def execute_query(query, value):    
     connection = create_connection()
     if connection:
@@ -39,25 +26,52 @@ def execute_query(query, value):
         finally:
             connection.close()
 
-
 class dbUtils:
-    def __init__(self, table_name, data) -> None:
-        self.table_name = table_name
-        self.data = data
+    def __init__(self) -> None:
+        pass
 
-    def add_data(self,):
+    def get_data(param, table_name, name):    
+        connection = create_connection()
+        if connection:
+            try:
+                with connection.cursor() as cursor:
+                    query = f'SELECT {param} FROM {table_name} WHERE name = %s;'
+                    cursor.execute(query, (name,))
+                    return cursor.fetchone()
+            except Exception as e:
+                print(f"Error: {e}")
+            finally:
+                connection.close()
+        return None
+    
+    def add_data(table_name, data):
         conn = create_connection()
         if conn:
             try:
                 with conn.cursor() as cursor:
-                    cursor.execute(f'SELECT * FROM {self.table_name} LIMIT 0;')
+                    cursor.execute(f'SELECT * FROM {table_name} LIMIT 0;')
                     column_names = [desc[0] for desc in cursor.description]
 
-                    columns = ', '.join(column_names)
-                    placeholders = ', '.join(['%s'] * len(column_names))
-                    insert_query = f"INSERT INTO {self.table_name} ({columns}) VALUES ({placeholders});"
+                    columns = ', '.join(column_names[1:])
+                    placeholders = ', '.join(['%s'] * len(column_names[1:]))
+                    
+                    insert_query = f"INSERT INTO {table_name} ({columns}) VALUES ({placeholders});"
 
-                    cursor.execute(insert_query, self.data)
+                    cursor.execute(insert_query, data)
+                    conn.commit()
+            except Exception as e:
+                print(f"Error: {e}")
+            finally:
+                conn.close()
+
+    def delete_data(table_name, id):
+        conn = create_connection()
+        if conn:
+            try:
+                with conn.cursor() as cursor:
+                    delete_query = f"DELETE FROM {table_name} WHERE id = %s"
+
+                    cursor.execute(delete_query, id)
                     conn.commit()
             except Exception as e:
                 print(f"Error: {e}")

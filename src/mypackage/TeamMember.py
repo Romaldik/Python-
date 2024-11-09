@@ -1,11 +1,12 @@
 from abc import ABC, abstractmethod
-from ..DataBase.db_utils import select_query, execute_query 
+from ..DataBase.db_utils import dbUtils
 
 class TeamMember(ABC):
     def __init__(self, name:str, age:int, team:str):
         self.name = name
         self.age = age
         self.team = team
+        self.db = dbUtils
     
     @abstractmethod  
     def add_people(self):
@@ -24,69 +25,54 @@ class Player(TeamMember):
         self.nickname = nickname
         self.role = role
     
-    def add_people(self):
-        query = 'SELECT id FROM Team WHERE name = %s;'
-        team_id = select_query(query, (self.team,))
+    def add_people(self,):
+        team_id = self.db.get_data('id', 'team', self.team)
 
-        add_player = """
-        INSERT INTO Player (name, nickname, age, role, team_id)
-        VALUES (%s, %s, %s, %s, %s);
-        """
-        data = (self.name, self.nickname, self.age, self.role, team_id)
-        execute_query(add_player, data)
+        data = (self.name, self.nickname, self.age, self.role, team_id[0])
+        self.db.add_data('player', data)
 
     def delete_people(self):
-        query = 'SELECT id FROM Player WHERE name = %s;'
-        player_id = select_query(query, (self.name,))
+        player_id = self.db.get_data('id', 'player', self.name)
 
-        delete_query = "DELETE FROM Player WHERE id = %s"
-        execute_query(delete_query, player_id)
+        self.db.delete_data('player', player_id)
     
     def __str__(self):
-        return f"{self.name} ({self.role}), навички {self.skills}"
+        return self.db.get_data('*', 'player', self.name)
     
 class Coach(TeamMember):
     def __init__(self, name, nickname, age, team):
         super.__init__(name, age, team)
         self.nickname = nickname
         
-    def add_people(self):
-        query = 'SELECT id FROM Team WHERE name = %s;'
-        team_id = select_query(query, (self.team,))
+    def add_people(self,):
+        team_id = self.db.get_data('id', 'team', self.team)
 
-        add_coach = """
-        INSERT INTO Coach (name, nickname, age, team_id)
-        VALUES (%s, %s, %s, %s);
-        """
-        data = (self.name, self.nickname, self.age, team_id)
-        execute_query(add_coach, data)
+        data = (self.name, self.nickname, self.age, team_id[0])
+        self.db.add_data('coach', data)
 
     def delete_people(self):
-        query = 'SELECT id FROM Coach WHERE name = %s;'
-        coach_id = select_query(query, (self.name,))
+        coach_id = self.db.get_data('id', 'coach', self.name)
 
-        delete_query = "DELETE FROM Coach WHERE id = %s"
-        execute_query(delete_query, coach_id)
+        self.db.delete_data('coach', coach_id)
+
+    def __str__(self):
+        return self.db.get_data('*', 'coach', self.name)
 
 class Staff(TeamMember):
     def __init__(self, name, age, role, team):
         super().__init__(name, age, team)
         self.role = role
     
-    def add_people(self):
-        query = 'SELECT id FROM Team WHERE name = %s;'
-        team_id = select_query(query, (self.team,))
+    def add_people(self,):
+        team_id = self.db.get_data('id', 'team', self.team)
 
-        add_staff = """
-        INSERT INTO Staff (name, age, role, team_id)
-        VALUES (%s, %s, %s, %s);
-        """
-        data = (self.name, self.age, self.role, team_id)
-        execute_query(add_staff, data)
+        data = (self.name, self.age, self.role, team_id[0])
+        self.db.add_data('staff', data)
 
     def delete_people(self):
-        query = 'SELECT id FROM Staff WHERE name = %s;'
-        staff_id = select_query(query, (self.name,))
+        staff_id = self.db.get_data('id', 'staff', self.name)
 
-        delete_query = "DELETE FROM Staff WHERE id = %s"
-        execute_query(delete_query, staff_id)
+        self.db.delete_data('staff', staff_id)
+
+    def __str__(self):
+        return self.db.get_data('*', 'staff', self.name)
