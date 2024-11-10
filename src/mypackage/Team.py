@@ -2,13 +2,17 @@ from ..DataBase.db_utils import dbUtils
 from .TeamMember import Player, Coach, Staff
 
 class Team:
-    def __init__(self):
+    def __init__(self, name, location, trining_prog, period_of_sponsorship):
+        self.name = name
+        self.location = location
+        self.trining_prog = trining_prog
+        self.period_of_sponsorship = period_of_sponsorship
         self.db = dbUtils
 
-    def create_team(self, name, location, trining_prog, period_of_sponsorship):
-        trining_prog_id = self.db.get_data('id', 'trainingProgram', trining_prog)
+    def create_team(self,):
+        trining_prog_id = self.db.get_data('id', 'trainingProgram', self.trining_prog)
 
-        data = (name, location, trining_prog_id[0], period_of_sponsorship)
+        data = (self.name, self.location, trining_prog_id[0], self.period_of_sponsorship)
         self.db.add_data('team', data)
     
     def delete_team(self, name):
