@@ -54,7 +54,7 @@ CREATE TABLE Team_Sponsor (
 -- Таблиця Tournament
 CREATE TABLE Tournament (
     id SERIAL PRIMARY KEY,
-    name VARCHAR(255) NOT NULL,
+    name VARCHAR(255) UNIQUE NOT NULL,
     duration INTERVAL NOT NULL,
     location VARCHAR(255) NOT NULL,
     prize_money DECIMAL(10, 2) NOT NULL
