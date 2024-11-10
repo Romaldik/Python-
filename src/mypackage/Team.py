@@ -1,40 +1,38 @@
-
+from .TeamMember import Player, Coach, Staff
 
 class Team:
-    def __init__(self, name):
+    def __init__(self, name, location, trining_prog, period_of_sponsorship):
         self.name = name
-        self.members = []
-        self.sponsors = []
-        self.training_programs = []
+        self.location = location
+        self.trining_prog = trining_prog
+        self.period_of_sponsorship = period_of_sponsorship
         
-    def recruit_member(self, member):
-        if isinstance(member, (Player, Coach, Staff)):
-            self.members.append(member)
-            print(f"{member} додано до команди.")
-        else:
-            raise ValueError("Член команди повинен бути гравцем, тренером або персоналом.")
+    def create_team(self):
+        pass
+    
+    def delete_team(self):
+        pass
 
-    def organize_practice(self, training_program):
-        if training_program not in self.training_programs:
-            self.training_programs.append(training_program)
-        training_program.start_program(self)
-        print(f"Організовано тренування: {training_program}")
+    def change_team_player(self):
+        pass
 
-    def participate_tournament(self, tournament):
-        tournament.add_team(self)
-        print(f"Команда {self.name} бере участь у турнірі '{tournament.name}'.")
+    def change_team_coach(self):
+        pass
 
-    def negotiate_sponsorship(self, sponsor):
-        self.sponsors.append(sponsor)
-        sponsor.negotiate(self)
-        print(f"Укладено спонсорську угоду з {sponsor.name}")
+    def change_team_staff(self):
+        pass
 
-    def analyze_performence(self):
-        for member in self.members:
-            member.analyze_perfomence()
+    def add_player(self):
+        pass
 
-    def list_members(self):
-        return [str(member) for member in self.members]
+    def add_coach(self):
+        pass
+
+    def add_staff(self):
+        pass
+
+    def add_sponsor(self):
+        pass  
     
     def __str__(self):
         return f"Команда {self.name} має {len(self.members)} членів і {len(self.sponsors)} спонсорів."
