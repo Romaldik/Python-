@@ -8,7 +8,7 @@ CREATE TABLE TrainingProgram (
 -- Таблиця Team
 CREATE TABLE Team (
     id SERIAL PRIMARY KEY,
-    name VARCHAR(255) NOT NULL,
+    name VARCHAR(255) UNIQUE NOT NULL,
     location VARCHAR(255) NOT NULL,
     training_program_id INT,
     period_of_sponsorship INTERVAL NOT NULL,
