@@ -20,17 +20,9 @@ class Team:
 
         self.db.delete_data('team', team_id)
 
-    def change_team_player(self):
-        pass
-
-    def change_team_coach(self):
-        pass
-
-    def change_team_staff(self):
-        pass
-
-    def add_player(self):
-        pass
+    def add_player(self, name, nickname, age, role, team):
+        player = Player(name, nickname, age, role, team)
+        player.add_people()
 
     def add_coach(self):
         pass
@@ -40,6 +32,18 @@ class Team:
 
     def add_sponsor(self):
         pass  
+
+    def change_team_players(self):
+        pass
+
+    def change_team_coach(self):
+        pass
+
+    def change_team_staff(self):
+        pass
+
+    def change_team_sponsor(self):
+        pass
     
     def __str__(self):
         return f"Команда {self.name} має {len(self.members)} членів і {len(self.sponsors)} спонсорів."
