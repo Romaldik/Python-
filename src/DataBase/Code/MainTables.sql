@@ -18,7 +18,7 @@ CREATE TABLE Team (
 -- Таблиця Coach
 CREATE TABLE Coach (
     id SERIAL PRIMARY KEY,
-    name VARCHAR(255) UNIQUE NOT NULL,
+    name VARCHAR(255) NOT NULL,
     Nickname VARCHAR(255) UNIQUE NOT NULL,
     age INT NOT NULL,
     team_id INT,
@@ -28,7 +28,7 @@ CREATE TABLE Coach (
 -- Таблиця Player
 CREATE TABLE Player (
     id SERIAL PRIMARY KEY,
-    name VARCHAR(255) UNIQUE NOT NULL,
+    name VARCHAR(255) NOT NULL,
     Nickname VARCHAR(255) UNIQUE NOT NULL,
     age INT NOT NULL,
     Role VARCHAR(255),
@@ -81,11 +81,10 @@ CREATE TABLE Tournament_Sponsor (
 -- Таблиця Staff
 CREATE TABLE Staff (
     id SERIAL PRIMARY KEY,
-    name VARCHAR(255) UNIQUE NOT NULL,
+    name VARCHAR(255) NOT NULL,
     age INT NOT NULL,
     role VARCHAR(255) NOT NULL
 );
-
 
 -- Таблиця Team_Staff (зв'язок між Team та Staff)
 CREATE TABLE Team_Staff (

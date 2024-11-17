@@ -1,12 +1,11 @@
 from abc import ABC, abstractmethod
-from ..DataBase.db_utils import dbUtils
+from ..DataBase.db_utils import dbUtils as db
 
 class TeamMember(ABC):
     def __init__(self, name:str, age:int, team:str):
         self.name = name
         self.age = age
-        self.team = team
-        self.db = dbUtils
+        #self.team = team
     
     @abstractmethod  
     def add_people(self):
@@ -18,7 +17,7 @@ class TeamMember(ABC):
         
     def __str__(self):
         pass
-    
+
 class Player(TeamMember):
     def __init__(self, name, nickname, age, role, team):
         super().__init__(name, age, team)
@@ -26,18 +25,16 @@ class Player(TeamMember):
         self.role = role
     
     def add_people(self,):
-        team_id = self.db.get_data('id', 'team', self.team)
+        data = (self.name, self.nickname, self.age, self.role)
+        db.add_data('player', data)
 
-        data = (self.name, self.nickname, self.age, self.role, team_id[0])
-        self.db.add_data('player', data)
+    @staticmethod
+    def delete_people(name):
+        player_id = db.get_data('id', 'player', name)
+        db.delete_data('player', player_id)
 
-    def delete_people(self):
-        player_id = self.db.get_data('id', 'player', self.name)
-
-        self.db.delete_data('player', player_id)
-    
-    def __str__(self):
-        return self.db.get_data('*', 'player', self.name)
+    def list_of_players():
+        return db.show_data('Team_Name', 'player', 'team', 'team_id')
     
 class Coach(TeamMember):
     def __init__(self, name, nickname, age, team):
@@ -45,18 +42,19 @@ class Coach(TeamMember):
         self.nickname = nickname
         
     def add_people(self,):
-        team_id = self.db.get_data('id', 'team', self.team)
-
-        data = (self.name, self.nickname, self.age, team_id[0])
-        self.db.add_data('coach', data)
-
-    def delete_people(self):
-        coach_id = self.db.get_data('id', 'coach', self.name)
-
-        self.db.delete_data('coach', coach_id)
+        data = (self.name, self.nickname, self.age)
+        db.add_data('coach', data)
 
     def __str__(self):
-        return self.db.get_data('*', 'coach', self.name)
+        return db.get_data('*', 'coach', self.name)
+    
+    @staticmethod
+    def delete_people(name):
+        coach_id = db.get_data('id', 'coach', name)
+        db.delete_data('coach', coach_id)
+
+    def list_of_coachs():
+        return db.show_data('Team_Name', 'coach', 'team', 'team_id')
 
 class Staff(TeamMember):
     def __init__(self, name, age, role, team):
@@ -64,15 +62,16 @@ class Staff(TeamMember):
         self.role = role
     
     def add_people(self,):
-        team_id = self.db.get_data('id', 'team', self.team)
-
-        data = (self.name, self.age, self.role, team_id[0])
-        self.db.add_data('staff', data)
-
-    def delete_people(self):
-        staff_id = self.db.get_data('id', 'staff', self.name)
-
-        self.db.delete_data('staff', staff_id)
+        data = (self.name, self.age, self.role)
+        db.add_data('staff', data)
 
     def __str__(self):
-        return self.db.get_data('*', 'staff', self.name)
+        return db.get_data('*', 'staff', self.name)
+    
+    @staticmethod
+    def delete_people(name):
+        staff_id = db.get_data('id', 'staff', name)
+        db.delete_data('staff', staff_id)
+
+    def list_of_staffs():
+        return db.show_data('Team_Name', 'staff', 'team', 'team_id')

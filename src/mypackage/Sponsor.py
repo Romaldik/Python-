@@ -1,8 +1,10 @@
 class Sponsor:
-    def __init__(self, name, offer):
+    def __init__(self, name):
         self.name = name
-        self.offer = offer
+
+    def create_sponsor(self):
+        pass
     
-    def negotiate(self, team):
-        print(f"Спонсор {self.name} пропонує підтримку команді {Team.name}")
-        
+    @staticmethod
+    def delete_sponsor():
+        pass  
