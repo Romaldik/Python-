@@ -1,12 +1,7 @@
 
-import pygame, sys
-from GUI.button import Button
-from GUI.Dropdown import Dropdown
-from GUI.inputBox import InputBox
-
-import sqlite3
-from __init__ import Team, Coach, Sponsor, Tournament, TeamMember, Staff, Player, TrainingProgram
-
+import sqlite3, pygame, sys
+#from Modules.__init__ import Team, Coach, Sponsor, Tournament, TeamMember, Staff, Player, TrainingProgram
+from GUI.Screens.Screens import ScreenManager, MainMenu, TeamsMenu, TournamentsMenu
 
 # SQLite database setup
 conn = sqlite3.connect('esports_manager.db')
@@ -34,146 +29,20 @@ c.execute('''CREATE TABLE IF NOT EXISTS training_programs (
 
 conn.commit()
 
-# Графічний інтерфес
+# Ініціалізація графічного інтерфесу
 pygame.init()
-
-SCREEN = pygame.display.set_mode((1920, 1080))
+screen = pygame.display.set_mode((1920, 1080))
 pygame.display.set_caption("Кіберспортивний менеджер")
 
-# Завантаження фонових зображень
-BG = pygame.image.load("assets/Background.png")
-BG_TEAMS = pygame.image.load("assets/TeamsBackground.png")
-
-# Повертає об'єкт типу "шрифт" певного розміру для подальшого використання
-def get_font(size): # Returns Press-Start-2P in the desired size
-    return pygame.font.Font("assets/main_menu_font.otf", size)
-
-# Створює візуальний еффект "fade" у вікні програми для переходів
-def fade_effect(duration=500, fade_in=True):
-    fade_surface = pygame.Surface((1920, 1080))
-    fade_surface.fill((0, 0, 0))
-    
-    clock = pygame.time.Clock()
-    start_time = pygame.time.get_ticks()
-
-    while True:
-        elapsed_time = pygame.time.get_ticks() - start_time
-        alpha = min(255, int(255 * elapsed_time / duration))
-        
-        if not fade_in:  # Если не затухание, убираем цвет
-            alpha = 255 - alpha
-
-        fade_surface.set_alpha(alpha)
-        SCREEN.blit(fade_surface, (0, 0))
-        pygame.display.update()
-        clock.tick(60)
-
-        if elapsed_time >= duration:
-            break
+screen_manager = ScreenManager(screen)
+screen_manager.add_screen("main_menu", MainMenu(screen, screen_manager))
+screen_manager.add_screen("teams_menu", TeamsMenu(screen, screen_manager))
+screen_manager.add_screen("tournaments_menu", TournamentsMenu(screen, screen_manager))
+screen_manager.switch_to("main_menu")
 
 
-def teams_menu():
-    fade_effect(duration=300, fade_in=True)
 
-    # Создание полей для ввода имени и выпадающих списков
-    input_boxes = [InputBox(20, 100 + i * 60, 140, 40) for i in range(5)]
-    roles_dropdowns = [Dropdown(180, 100 + i * 60, ["Снайпер", "Капитан", "Игрок на оупен"]) for i in range(5)]
-    skill_level_dropdowns = [Dropdown(380, 100 + i * 60, [str(i) for i in range(1, 11)]) for i in range(5)]
-
-    while True:
-        SCREEN.blit(BG_TEAMS, (0, 0))
-
-        TEAMS_MENU_MOUSE_POS = pygame.mouse.get_pos()
-
-        # Заголовок
-        TITLE_TEXT = get_font(75).render("Команди", True, "White")
-        TITLE_RECT = TITLE_TEXT.get_rect(topleft=(20, 20))
-        SCREEN.blit(TITLE_TEXT, TITLE_RECT)
-
-        # Список команд
-        teams_list = ["Команда 1", "Команда 2", "Команда 3"]  # Пример списка команд
-        for i, team in enumerate(teams_list):
-            TEAM_TEXT = get_font(50).render(team, True, "White")
-            TEAM_RECT = TEAM_TEXT.get_rect(topleft=(20, 100 + i * 60))
-            SCREEN.blit(TEAM_TEXT, TEAM_RECT)
-            # Логика для выделения области команды при наведении
-            if TEAM_RECT.collidepoint(TEAMS_MENU_MOUSE_POS):
-                pygame.draw.rect(SCREEN, (100, 100, 100), TEAM_RECT)  # Подсветка области
-
-        # Кнопки справа
-        ADD_TEAM_BUTTON = Button(image=None, pos=(1200, 200),
-                                 text_input="Додати нову команду", font=get_font(50), base_color="White", hovering_color="Green")
-        EDIT_TEAM_BUTTON = Button(image=None, pos=(1200, 300),
-                                  text_input="Редагувати команду", font=get_font(50), base_color="White", hovering_color="Green")
-        DELETE_TEAM_BUTTON = Button(image=None, pos=(1200, 400),
-                                    text_input="Видалити команду", font=get_font(50), base_color="White", hovering_color="Green")
-
-        ADD_TEAM_BUTTON.changeColor(TEAMS_MENU_MOUSE_POS)
-        ADD_TEAM_BUTTON.update(SCREEN)
-        EDIT_TEAM_BUTTON.changeColor(TEAMS_MENU_MOUSE_POS)
-        EDIT_TEAM_BUTTON.update(SCREEN)
-        DELETE_TEAM_BUTTON.changeColor(TEAMS_MENU_MOUSE_POS)
-        DELETE_TEAM_BUTTON.update(SCREEN)
-
-        # Область для заполнения информации о команде
-        details_area_rect = pygame.Rect(650, 100, 500, 600)  # Прямоугольник области
-        pygame.draw.rect(SCREEN, (0, 0, 0, 200), details_area_rect)  # Полупрозрачный черный прямоугольник
-        # Логика для отображения полей для ввода имени команды и участников
-
-        # Кнопки "Зберегти" и "Скасувати"
-        SAVE_BUTTON = Button(image=None, pos=(800, 750),
-                             text_input="Зберегти", font=get_font(50), base_color="White", hovering_color="Green")
-        CANCEL_BUTTON = Button(image=None, pos=(1100, 750),
-                               text_input="Скасувати", font=get_font(50), base_color="White", hovering_color="Green")
-        GO_BACK_BUTTON = Button(image=None, pos=(1100, 950),
-                               text_input="Повернутися", font=get_font(50), base_color="White", hovering_color="Green")
-
-        SAVE_BUTTON.changeColor(TEAMS_MENU_MOUSE_POS)
-        SAVE_BUTTON.update(SCREEN)
-        CANCEL_BUTTON.changeColor(TEAMS_MENU_MOUSE_POS)
-        CANCEL_BUTTON.update(SCREEN)
-        GO_BACK_BUTTON.changeColor(TEAMS_MENU_MOUSE_POS)
-        GO_BACK_BUTTON.update(SCREEN)
-
-        for i in range(5):
-            input_boxes[i].draw(SCREEN)
-            roles_dropdowns[i].draw(SCREEN)
-            skill_level_dropdowns[i].draw(SCREEN)
-
-
-        for event in pygame.event.get():
-            # Отображение игроков и управление событиями
-            for i in range(5):
-                input_boxes[i].handle_event(event)
-                roles_dropdowns[i].handle_event(event)
-                skill_level_dropdowns[i].handle_event(event)
-            if event.type == pygame.QUIT:
-                pygame.quit()
-                sys.exit()
-            if event.type == pygame.MOUSEBUTTONDOWN:
-                if GO_BACK_BUTTON.checkForInput(TEAMS_MENU_MOUSE_POS):
-                    main_menu()
-                # Логика для обработки нажатия кнопок "Додати нову команду", "Редагувати команду" и "Видалити команду"
-                if ADD_TEAM_BUTTON.checkForInput(TEAMS_MENU_MOUSE_POS):
-                    # Здесь должна быть логика для добавления новой команды
-                    pass
-                if EDIT_TEAM_BUTTON.checkForInput(TEAMS_MENU_MOUSE_POS):
-                    # Здесь должна быть логика для редактирования команды
-                    pass
-                if DELETE_TEAM_BUTTON.checkForInput(TEAMS_MENU_MOUSE_POS):
-                    # Здесь должна быть логика для удаления команды
-                    pass
-                if SAVE_BUTTON.checkForInput(TEAMS_MENU_MOUSE_POS):
-                    # Здесь должна быть логика для сохранения изменений
-                    pass
-                if CANCEL_BUTTON.checkForInput(TEAMS_MENU_MOUSE_POS):
-                    # Здесь должна быть логика для отмены изменений
-                    pass
-
-        pygame.display.update()
-
-
-def tournaments_menu():
+""" def tournaments_menu():
     while True:
         TEAMS_MENU_MOUSE_POS = pygame.mouse.get_pos()
 
@@ -198,44 +67,7 @@ def tournaments_menu():
                     main_menu()
 
         pygame.display.update()
-
-def main_menu():
-    fade_effect(duration=300, fade_in=True)
-    while True:
-        SCREEN.blit(BG, (0, 0))
-
-        MENU_MOUSE_POS = pygame.mouse.get_pos()
-
-        MENU_TEXT = get_font(100).render("ГОЛОВНЕ МЕНЮ", True, "#b68f40")
-        MENU_RECT = MENU_TEXT.get_rect(center=(500, 100))
-
-        TEAMS_BUTTON = Button(image=pygame.image.load("assets/Teams Rect.png"), pos=(500, 350), 
-                            text_input="Команди", font=get_font(75), base_color="#d7fcd4", hovering_color="White")
-        TOURNAMENTS_BUTTON = Button(image=pygame.image.load("assets/Tournaments Rect.png"), pos=(500, 550), 
-                            text_input="Турнiри", font=get_font(75), base_color="#d7fcd4", hovering_color="White")
-        QUIT_BUTTON = Button(image=pygame.image.load("assets/Quit Rect.png"), pos=(500, 800), 
-                            text_input="Вихiд", font=get_font(75), base_color="#d7fcd4", hovering_color="White")
-
-        SCREEN.blit(MENU_TEXT, MENU_RECT)
-
-        for button in [TEAMS_BUTTON, TOURNAMENTS_BUTTON, QUIT_BUTTON]:
-            button.changeColor(MENU_MOUSE_POS)
-            button.update(SCREEN)
-        
-        for event in pygame.event.get():
-            if event.type == pygame.QUIT:
-                pygame.quit()
-                sys.exit()
-            if event.type == pygame.MOUSEBUTTONDOWN:
-                if TEAMS_BUTTON.checkForInput(MENU_MOUSE_POS):
-                    teams_menu()
-                if TOURNAMENTS_BUTTON.checkForInput(MENU_MOUSE_POS):
-                    tournaments_menu()
-                if QUIT_BUTTON.checkForInput(MENU_MOUSE_POS):
-                    pygame.quit()
-                    sys.exit()
-
-        pygame.display.update()
+ """
 
 """ # Додавання команли
 def add_team_window(root):
@@ -495,7 +327,6 @@ def delete_team(team_id, window):
     show_teams()  # Поновлюємо список команд
  """
 if __name__ == "__main__":
-    """ main_window() """
-    main_menu()
+    screen_manager.run()
     conn.close()  # Закриття БД
 
