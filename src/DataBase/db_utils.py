@@ -1,50 +1,25 @@
 from . import create_connection
 
-def get_table_list():
-    connection = create_connection()
-    if connection:
-        try:
-            with connection.cursor() as cursor:
-                cursor.execute("SELECT table_name FROM information_schema.tables WHERE table_schema = 'public';")
-                tables = cursor.fetchall()
-                table_names = [table[0] for table in tables]
-                return table_names
-        except Exception as e:
-            print(f"Error fetching table list: {e}")
-        finally:
-            connection.close()
-    return []
-
-def execute_query(query, value):    
-    connection = create_connection()
-    if connection:
-        try:
-            with connection.cursor() as cursor:
-                cursor.execute(query, value)
-        except Exception as e:
-            print(f"Error: {e}")
-        finally:
-            connection.close()
-
 class dbUtils:
     def __init__(self) -> None:
         pass
 
-    def get_data(param, table_name, name):    
-        connection = create_connection()
-        if connection:
+    def get_data(param, table_name, name, column):    
+        conn = create_connection()
+        if conn:
             try:
-                with connection.cursor() as cursor:
-                    get_query = f'SELECT {param} FROM {table_name} WHERE name = %s;'
+                with conn.cursor() as cursor:
+                    get_query = f'SELECT {param} FROM {table_name} WHERE {column} = %s;'
                     cursor.execute(get_query, (name,))
                     return cursor.fetchone()
             except Exception as e:
                 print(f"Error: {e}")
             finally:
-                connection.close()
+                conn.close()
         return None
     
     def add_data(table_name, data):
+        exception_tables = ['team_sponsor', 'tournament_team', 'tournament_sponsor']
         conn = create_connection()
         if conn:
             try:
@@ -52,11 +27,11 @@ class dbUtils:
                     cursor.execute(f'SELECT * FROM {table_name} LIMIT 0;')
                     column_names = [desc[0] for desc in cursor.description]
 
-                    columns = ', '.join(column_names[1:])
-                    placeholders = ', '.join(['%s'] * len(column_names[1:]))
+                    index = column_names[1:] if table_name not in exception_tables else column_names
+                    columns = ', '.join(index)
+                    placeholders = ', '.join(['%s'] * len(index))
                     
-                    insert_query = f"INSERT INTO {table_name} ({columns}) VALUES ({placeholders});"
-
+                    insert_query = f"INSERT INTO {table_name} ({columns}) VALUES ({placeholders}) ON CONFLICT DO NOTHING;"
                     cursor.execute(insert_query, data)
                     conn.commit()
             except Exception as e:
@@ -69,8 +44,7 @@ class dbUtils:
         if conn:
             try:
                 with conn.cursor() as cursor:
-                    delete_query = f"DELETE FROM {table_name} WHERE id = %s"
-
+                    delete_query = f"DELETE FROM {table_name} WHERE id = %s;"
                     cursor.execute(delete_query, id)
                     conn.commit()
             except Exception as e:

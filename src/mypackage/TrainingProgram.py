@@ -11,7 +11,7 @@ class TrainingProgram:
 
     @staticmethod
     def delete_training_program(name):
-        id = db.get_data('id', 'trainingprogram', name)[0]
+        id = db.get_data('id', 'trainingprogram', name, 'name')
         db.delete_data('trainingprogram', id)
 
     def list_of_training_programs():
