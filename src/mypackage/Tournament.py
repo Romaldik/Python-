@@ -17,8 +17,10 @@ class Tournament:
         team_id = db.get_data('id', 'team', team, 'name')
         db.add_data('tournament_team', (tournament_id, team_id))
 
-    def delete_team():
-        pass
+    def delete_team(tournament, team):
+        tournament_id = db.get_data('id', 'tournament', tournament, 'name')[0]
+        team_id = db.get_data('id', 'team', team, 'name')[0]
+        db.delete_data('tournament_team', ['tournament_id', tournament_id, 'team_id', team_id])
 
     def show_tournament_teams():
         db.show_data('tournament_team', 'tournament', 'team', 'id')

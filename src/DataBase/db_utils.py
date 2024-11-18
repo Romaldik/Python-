@@ -19,8 +19,8 @@ class dbUtils:
         return None
     
     def add_data(table_name, data):
-        exception_tables = ['team_sponsor', 'tournament_team', 'tournament_sponsor']
         conn = create_connection()
+        exception_tables = ['team_sponsor', 'tournament_team', 'tournament_sponsor']
         if conn:
             try:
                 with conn.cursor() as cursor:
@@ -39,13 +39,18 @@ class dbUtils:
             finally:
                 conn.close()
 
-    def delete_data(table_name, id):
+    def delete_data(table_name, data):
         conn = create_connection()
+        exception_tables = ['team_sponsor', 'tournament_team', 'tournament_sponsor']
         if conn:
             try:
                 with conn.cursor() as cursor:
-                    delete_query = f"DELETE FROM {table_name} WHERE id = %s;"
-                    cursor.execute(delete_query, id)
+                    if table_name not in exception_tables:
+                        delete_query = f"DELETE FROM {table_name} WHERE id = %s;"
+                        cursor.execute(delete_query, data)
+                    else:
+                        delete_query = f"DELETE FROM {table_name} WHERE {data[0]} = {data[1]} and {data[2]} = {data[3]};"
+                        cursor.execute(delete_query)
                     conn.commit()
             except Exception as e:
                 print(f"Error: {e}")

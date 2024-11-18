@@ -63,6 +63,9 @@ def delete_tournament():
 def add_team_tournament():
     Tournament.add_team('Major', 'Navi')
 
+def delete_team_tournament():
+    Tournament.delete_team('Major', 'Navi')
+
 if __name__ == "__main__":
     #create_training_program()
     #create_team()
@@ -74,5 +77,6 @@ if __name__ == "__main__":
     #create_sponsor()
     #delete_sponsor()
     #create_tournament()
-    #delete_tournament()
-    add_team_tournament()
+    delete_tournament()
+    #add_team_tournament()
+    #delete_team_tournament()
