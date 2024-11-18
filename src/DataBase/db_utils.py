@@ -97,18 +97,36 @@ class dbUtils:
         if connection:
             try:
                 with connection.cursor() as cursor:
-                    query = f"SELECT p.*, COALESCE(t.name, 'None') AS {table_name} FROM {table1} p JOIN {table2} t ON p.{id_name} = t.id;"
+                    query = f"SELECT p.*, COALESCE(t.name, 'None') AS {table_name} FROM {table1} p LEFT JOIN {table2} t ON p.{id_name} = t.id;"
                     cursor.execute(query)
                     
                     columns = [desc[0] for desc in cursor.description] 
-                    #print(columns)       
                     filtered_columns = [col for col in columns if 'id' not in col.lower()]
-                    #print(filtered_columns)    
                     results = [
                         {col: value for col, value in zip(columns, row) if col in filtered_columns}
                         for row in cursor.fetchall()
                     ]
-                    #print([{col: value for col, value in zip(columns, row)} for row in cursor.fetchall()])
+                    return results
+            except Exception as e:
+                    print(f"Error: {e}")
+            finally:
+                connection.close()
+        return None
+    
+    def show_table(table_name):
+        connection = create_connection()
+        if connection:
+            try:
+                with connection.cursor() as cursor:
+                    query = f"SELECT * FROM {table_name};"
+                    cursor.execute(query)
+                    
+                    columns = [desc[0] for desc in cursor.description] 
+                    filtered_columns = [col for col in columns if 'id' not in col.lower()]
+                    results = [
+                        {col: value for col, value in zip(columns, row) if col in filtered_columns}
+                        for row in cursor.fetchall()
+                    ]
                     return results
             except Exception as e:
                     print(f"Error: {e}")

@@ -14,10 +14,10 @@ class TeamMember(ABC):
     @abstractmethod  
     def delete_people(self):
         pass
-        
-    def __str__(self):
-        pass
 
+    def list_of_players():
+        pass
+        
 class Player(TeamMember):
     def __init__(self, name, nickname, age, role, team):
         super().__init__(name, age, team)
@@ -44,9 +44,6 @@ class Coach(TeamMember):
     def add_people(self,):
         data = (self.name, self.nickname, self.age)
         db.add_data('coach', data)
-
-    def __str__(self):
-        return db.get_data('*', 'coach', self.name)
     
     @staticmethod
     def delete_people(name):
@@ -64,9 +61,6 @@ class Staff(TeamMember):
     def add_people(self,):
         data = (self.name, self.age, self.role)
         db.add_data('staff', data)
-
-    def __str__(self):
-        return db.get_data('*', 'staff', self.name)
     
     @staticmethod
     def delete_people(name):

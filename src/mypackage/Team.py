@@ -5,20 +5,14 @@ from .Sponsor import Sponsor
 def get_team_id(name):
     return db.get_data('id', 'team', name)[0]
 class Team:
-    def __init__(self, name, location, trining_prog, period_of_sponsorship):
+    def __init__(self, name, location, period_of_sponsorship):
         self.name = name
         self.location = location
-        self.trining_prog = trining_prog
         self.period_of_sponsorship = period_of_sponsorship
 
     def create_team(self,):
-        trining_prog_id = db.get_data('id', 'trainingProgram', self.trining_prog)
-
-        data = (self.name, self.location, trining_prog_id[0], self.period_of_sponsorship)
+        data = (self.name, self.location, self.period_of_sponsorship)
         db.add_data('team', data)
-
-    def __str__(self):
-        return db.get_data('*', 'team', self.name)
     
     @staticmethod
     def delete_team(name):
@@ -35,6 +29,10 @@ class Team:
     def add_staff(name, team):
         staff_id = db.get_data('id', 'staff', name)
         db.update_data('staff', 'team_id', get_team_id(team), 'id', staff_id[0])
+
+    def add_training_program(program_name, team):
+        program_id = db.get_data('id', 'trainingprogram', program_name)
+        db.update_data('team', 'training_program_id', get_team_id(team), 'id', program_id[0])
 
     def add_sponsor(name, team):
         pass
