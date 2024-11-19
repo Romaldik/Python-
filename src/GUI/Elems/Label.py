@@ -1,13 +1,16 @@
+import pygame
+from pygame import *
+
 class Label:
     def __init__(self, screen, text, pos, font, color=(255, 255, 255)):
         """
-        Инициализация статичного текста.
+        Ініціалізація статичного тексту.
 
-        :param screen: Экран для отображения текста.
-        :param text: Текст для отображения.
-        :param pos: Позиция текста (x, y).
-        :param font: Объект шрифта Pygame.
-        :param color: Цвет текста.
+        :param screen: Екран для відображення тексту.
+        :param text: Текст для відображення.
+        :param pos: Позиція тексту (x, y).
+        :param font: Об'єкт шрифту Pygame.
+        :param color: Колір тексту.
         """
         self.screen = screen
         self.text = text
@@ -18,10 +21,10 @@ class Label:
         self.rect = self.rendered_text.get_rect(topleft=(self.x, self.y))
 
     def update(self):
-        """Отображает текст на экране."""
+        """Відображає текст на екрані."""
         self.screen.blit(self.rendered_text, self.rect)
 
     def set_text(self, new_text):
-        """Обновляет текст."""
+        """Оновлює текст."""
         self.text = new_text
         self.rendered_text = self.font.render(self.text, True, self.color)

@@ -33,7 +33,7 @@ CREATE TABLE Player (
     age INT NOT NULL,
     Role VARCHAR(255),
     team_id INT,
-    FOREIGN KEY (team_id) REFERENCES Team(id)
+    FOREIGN KEY (team_id) REFERENCES Team(id) on DELETE set null
 );
 
 -- Таблиця Sponsor
@@ -44,8 +44,8 @@ CREATE TABLE Sponsor (
 
 -- Таблиця Team_Sponsor (зв'язок між Team та Sponsor)
 CREATE TABLE Team_Sponsor (
-    team_id INT,
     sponsor_id INT,
+    team_id INT,
     PRIMARY KEY (team_id, sponsor_id),
     FOREIGN KEY (team_id) REFERENCES Team(id),
     FOREIGN KEY (sponsor_id) REFERENCES Sponsor(id)
@@ -83,14 +83,7 @@ CREATE TABLE Staff (
     id SERIAL PRIMARY KEY,
     name VARCHAR(255) NOT NULL,
     age INT NOT NULL,
-    role VARCHAR(255) NOT NULL
-);
-
--- Таблиця Team_Staff (зв'язок між Team та Staff)
-CREATE TABLE Team_Staff (
+    role VARCHAR(255) NOT NULL,
     team_id INT,
-    staff_id INT,
-    PRIMARY KEY (team_id, staff_id),
-    FOREIGN KEY (team_id) REFERENCES Team(id),
-    FOREIGN KEY (staff_id) REFERENCES Staff(id)
+    FOREIGN KEY(team_id) REFERENCES Team(id) on DELETE set NULL
 );

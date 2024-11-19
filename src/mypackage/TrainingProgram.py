@@ -1,14 +1,18 @@
+from ..DataBase.db_utils import dbUtils as db
+
 class TrainingProgram:
-    def __init__(self, name, duration, focus_area):
+    def __init__(self, name, duration):
         self.name = name
         self.duration = duration  
-        self.focus_area = focus_area  
+    
+    def create_training_program(self):
+        data = (self.name, self.duration)
+        db.add_data('trainingprogram', data)
 
-    def start_program(self, team):
-        print(f"Розпочато тренування '{self.name}' тривалістю {self.duration} днів.")
-        for member in team.members:
-            if isinstance(member, Player):
-                print(f"Гравець {member.name} тренується у напрямку {self.focus_area}.")
+    @staticmethod
+    def delete_training_program(name):
+        id = db.get_data('id', 'trainingprogram', name, 'name')
+        db.delete_data('trainingprogram', id)
 
-    def __str__(self):
-        return f"Тренувальна програма '{self.name}' з фокусом на {self.focus_area}"
+    def list_of_training_programs():
+        return db.show_table('trainingprogram')

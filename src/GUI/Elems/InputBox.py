@@ -1,33 +1,37 @@
 import pygame, sys
-
 class InputBox:
-    def __init__(self, x, y, width, height, text=''):
-        self.rect = pygame.Rect(x, y, width, height)
-        self.color = pygame.Color('lightskyblue3')
+    def __init__(self, screen, pos, size, font, text=''):
+        self.screen = screen
+        self.rect = pygame.Rect(pos, size)
+        self.color = (0, 0, 0, 128)
         self.text = text
-        self.txt_surface = pygame.font.Font("assets/main_menu_font.otf", 32).render(text, True, self.color)
+        self.font = font
+        self.txt_surface = self.font.render(self.text, True, self.color)
         self.active = False
 
     def handle_event(self, event):
         if event.type == pygame.MOUSEBUTTONDOWN:
-            # Перевірка того, що користувач здійснив натиск на кнопку миші, коли курсор знаходиться на полі введення
+            # Проверяем, нажал ли пользователь на поле ввода
             if self.rect.collidepoint(event.pos):
-                self.active = not self.active  # Перемикаємо активність стану
+                self.active = not self.active  # Переключение состояния активности
             else:
                 self.active = False
-            self.color = pygame.Color('lightskyblue3') if self.active else pygame.Color('lightskyblue1')
+            self.color = pygame.Color('dodgerblue2') if self.active else pygame.Color('lightskyblue3')
 
         if event.type == pygame.KEYDOWN:
             if self.active:
                 if event.key == pygame.K_RETURN:
-                    print(self.text)  # Обробка уведення
+                    print(self.text)  # Обработка текста
                 elif event.key == pygame.K_BACKSPACE:
-                    self.text = self.text[:-1]  # Видалити останній символ
+                    self.text = self.text[:-1]  # Удаляем последний символ
                 else:
-                    self.text += event.unicode  # Додати уведенний символ
+                    self.text += event.unicode  # Добавляем новый символ
 
-        self.txt_surface = pygame.font.Font("assets/main_menu_font.otf", 32).render(self.text, True, self.color)
+                # Обновляем текстовую поверхность
+                self.txt_surface = self.font.render(self.text, True, self.color)
 
-    def draw(self, screen):
-        screen.blit(self.txt_surface, (self.rect.x + 5, self.rect.y + 5))
-        pygame.draw.rect(screen, self.color, self.rect, 2)
+    def draw(self):
+        # Рисуем текст
+        self.screen.blit(self.txt_surface, (self.rect.x + 5, self.rect.y + 5))
+        # Рисуем рамку
+        pygame.draw.rect(self.screen, self.color, self.rect, 2)

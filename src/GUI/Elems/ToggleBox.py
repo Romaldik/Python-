@@ -2,7 +2,7 @@ import pygame
 
 
 class ToggleBox:
-    def __init__(self, screen, pos, size, text, font, base_color, hovering_color, toggled_color):
+    def __init__(self, screen, pos, size, text, font):
         """
         Инициализация ToggleBox.
 
@@ -11,18 +11,17 @@ class ToggleBox:
         :param size: размер ToggleBox (width, height).
         :param text: текст на ToggleBox.
         :param font: шрифт для текста.
-        :param base_color: основной цвет фона.
-        :param hovering_color: цвет фона при наведении.
-        :param toggled_color: цвет фона при включенном состоянии.
         """
         self.screen = screen
         self.x, self.y = pos
         self.width, self.height = size
         self.text = text
         self.font = font
-        self.base_color = base_color
-        self.hovering_color = hovering_color
-        self.toggled_color = toggled_color
+
+        # Цвета по умолчанию
+        self.base_color = (0, 0, 0, 128)  # Прозрачно-чёрный
+        self.hovering_color = (0, 0, 0, 255)  # Полностью чёрный
+        self.toggled_color = (139, 0, 0)  # Тёмно-бордовый
 
         self.rect = pygame.Rect(self.x, self.y, self.width, self.height)
         self.text_surface = self.font.render(self.text, True, "White")

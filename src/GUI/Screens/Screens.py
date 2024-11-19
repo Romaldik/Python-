@@ -43,7 +43,7 @@ class MainMenu:
 
         # Инициализация кнопок
         self.TEAMS_BUTTON = Button(
-            image=None, 
+            self.SCREEN,
             pos=(center_x, start_y), 
             text_input="Команди", 
             font=get_font(75), 
@@ -51,7 +51,7 @@ class MainMenu:
             hovering_color="White"
         )
         self.TOURNAMENTS_BUTTON = Button(
-            image=None, 
+            self.SCREEN,
             pos=(center_x, start_y + button_height + button_spacing), 
             text_input="Турніри", 
             font=get_font(75), 
@@ -59,7 +59,7 @@ class MainMenu:
             hovering_color="White"
         )
         self.QUIT_BUTTON = Button(
-            image=None, 
+            self.SCREEN,
             pos=(center_x, start_y + 2 * (button_height + button_spacing)), 
             text_input="Вихід", 
             font=get_font(75), 
@@ -69,6 +69,8 @@ class MainMenu:
 
     def update(self):
         fade_effect(self.SCREEN, duration=300, fade_in=True)
+        clock = pygame.time.Clock()
+        TARGET_FPS = 60
         while True:
             self.MENU_MOUSE_POS = pygame.mouse.get_pos()
 
@@ -77,13 +79,14 @@ class MainMenu:
             self.SCREEN.blit(self.MENU_TEXT, self.MENU_RECT)
             for button in [self.TEAMS_BUTTON, self.TOURNAMENTS_BUTTON, self.QUIT_BUTTON]:
                 button.changeColor(self.MENU_MOUSE_POS)
-                button.update(self.SCREEN)
+                button.update()
 
             # Обработка событий (переходы между меню)
             if self.event_handler():
                 break
 
             pygame.display.update()
+            clock.tick(TARGET_FPS)
 
     def event_handler(self):
         for event in pygame.event.get():
@@ -118,133 +121,135 @@ class TeamsMenu:
         self.TITLE_RECT = self.TITLE_TEXT.get_rect(topleft=(20, 20))
 
         # Ліва частина вікна: Список команд
-        self.teams = Team.list_of_teams()  # Отримання списку команд з бази даних
-        if self.teams == None:
-            self.teams = []
-        else:
-            self.toggle_boxes = [
-                ToggleBox(
-                    self.SCREEN,
-                    (20, 120 + i * 60),
-                    (300, 40),
-                    team["Training_Program_Name"],
-                    get_font(30),
-                    base_color=(0, 0, 0, 128),
-                    hovering_color="White",
-                    toggled_color="Green",
-                )
-                for i, team in enumerate(self.teams)
-            ]
+        self.teams = Team.list_of_teams() or []
+        self.toggle_boxes = self.create_team_toggle_boxes()
 
         self.selected_team = None
 
-        # Центральная часть: прокручиваемый контейнер
+        # Центральна частина: прокручуваний контейнер
         self.scrollable_container = ScrollableContainer(self.SCREEN, (350, 120), (700, 600))
 
-        # Правая часть: кнопки действий
-        self.ADD_MEMBER_BUTTON = Button(image=None, pos=(1300, 200), text_input="Додати члена", font=get_font(30),
-                                        base_color="White", hovering_color="Green")
-        self.REMOVE_MEMBER_BUTTON = Button(image=None, pos=(1300, 300), text_input="Видалити члена", font=get_font(30),
-                                           base_color="White", hovering_color="Green")
-        self.VIEW_INFO_BUTTON = Button(image=None, pos=(1300, 400), text_input="Переглянути дані", font=get_font(30),
-                                       base_color="White", hovering_color="Green")
+        # Переключатели
+        self.switch_buttons = [
+            ToggleBox(self.SCREEN, (400 + i * 150, 50), (140, 40), text, get_font(20))
+            for i, text in enumerate(["Гравці", "Коучі", "Спонсори", "Інші"])
+        ]
+        self.selected_category = "Гравці"
+        
+        # Поле для вводу
+        self.input_box_visible = False
+        self.input_box = InputBox(self.SCREEN, (20, 120 + len(self.teams) * 60 + 20), (300, 40), get_font(30))
 
-        # Нижняя часть: кнопки сохранения, отмены и возврата
-        self.SAVE_BUTTON = Button(image=None, pos=(800, 750), text_input="Зберегти", font=get_font(30),
-                                  base_color="White", hovering_color="Green")
-        self.CANCEL_BUTTON = Button(image=None, pos=(1000, 750), text_input="Скасувати", font=get_font(30),
-                                    base_color="White", hovering_color="Green")
-        self.GO_BACK_BUTTON = Button(image=None, pos=(1200, 750), text_input="Повернутися", font=get_font(30),
-                                     base_color="White", hovering_color="Green")
+        # Кнопки
+        self.ADD_TEAM_BUTTON = Button(self.SCREEN, (20, 120 + len(self.teams) * 60 + 80), "+",
+                                      get_font(30), "White", "Green")
+        self.REMOVE_TEAM_BUTTON = Button(self.SCREEN, (80, 120 + len(self.teams) * 60 + 80), "-",
+                                         get_font(30), "White", "Green")
+        self.SAVE_NEW_TEAM_BUTTON = Button(self.SCREEN, (80, 120 + len(self.teams) * 60 + 80), "Зберегти",
+                                           get_font(30), "White", "Green")
+
+    def create_team_toggle_boxes(self):
+        """Создает список переключателей команд."""
+        return [
+            ToggleBox(self.SCREEN, (20, 120 + i * 60), (300, 40), team["name"], get_font(30))
+            for i, team in enumerate(self.teams)
+        ]
 
     def display_team_members(self):
-        """Обновити центральний контейнер для відображення членів вибраної команди."""
+        """Обновляет центральный контейнер для отображения членов команды в зависимости от выбранной категории."""
         self.scrollable_container.elements = []
         if self.selected_team:
-            team_id = self.selected_team["id"]
-            members = db.show_data("name, age, role", "player", "team", team_id)
+            # Получение членов команды в зависимости от выбранной категории
+            if self.selected_category == "Гравці":
+                members = Team.show_team_players(self.selected_team['name'])
+            elif self.selected_category == "Коучі":
+                members = Team.show_team_coaches(self.selected_team['name'])
+            elif self.selected_category == "Спонсори":
+                members = Team.show_team_sponsors(self.selected_team['name'])
+            elif self.selected_category == "Інші":
+                members = Team.show_team_other(self.selected_team['name'])
+            else:
+                members = []
+            
+            # Добавление элементов в контейнер
             for member in members:
-                label = Label(self.SCREEN, f"{member['name']} ({member['role']})", pos=(350, 120), font=get_font(25), color="White")
+                label = Label(self.SCREEN, f"{member[0]} {member[1]} {member[2]} {member[3]}", (350, 120),
+                              get_font(25), "White")
                 self.scrollable_container.add_element(label)
 
+    def handle_buttons(self, event):
+        """Обработка нажатия кнопок."""
+        if self.input_box_visible:
+            self.input_box.handle_event(event)
+            if self.SAVE_NEW_TEAM_BUTTON.checkForInput(self.MENU_MOUSE_POS):
+                new_team_name = self.input_box.handle_event(event)
+                if new_team_name:
+                    # Логика добавления новой команды в базу данных
+                    Team.add_team(new_team_name)  # Запрос на добавление
+                    self.teams.append({"name": new_team_name})
+                    self.toggle_boxes = self.create_team_toggle_boxes()
+                    self.input_box_visible = False
+        else:
+            if self.ADD_TEAM_BUTTON.checkForInput(self.MENU_MOUSE_POS):
+                self.input_box_visible = True
+            if self.REMOVE_TEAM_BUTTON.checkForInput(self.MENU_MOUSE_POS) and self.selected_team:
+                # Логика удаления команды из базы данных
+                Team.remove_team(self.selected_team['name'])  # Запрос на удаление
+                self.teams = [team for team in self.teams if team != self.selected_team]
+                self.toggle_boxes = self.create_team_toggle_boxes()
+                self.selected_team = None
+
     def event_handler(self):
-        """Обробка подій."""
+        """Обработка событий."""
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 pygame.quit()
                 sys.exit()
 
-            # Прокрутка контейнера
             self.scrollable_container.handle_event(event)
 
-            # Логіка для вибору команди
             for toggle_box, team in zip(self.toggle_boxes, self.teams):
                 toggle_box.handle_event(event)
                 if toggle_box.is_selected:
                     self.selected_team = team
                     self.display_team_members()
 
-            # Кнопки
             if event.type == pygame.MOUSEBUTTONDOWN:
-                if self.GO_BACK_BUTTON.checkForInput(self.MENU_MOUSE_POS):
-                    self.manager.switch_to("main_menu")
-                    return True
-                if self.ADD_MEMBER_BUTTON.checkForInput(self.MENU_MOUSE_POS) and self.selected_team:
-                    self.add_member()
-                if self.REMOVE_MEMBER_BUTTON.checkForInput(self.MENU_MOUSE_POS) and self.selected_team:
-                    self.remove_member()
-                if self.VIEW_INFO_BUTTON.checkForInput(self.MENU_MOUSE_POS) and self.selected_team:
-                    self.view_team_info()
+                self.handle_buttons(event)
 
-        return False
-
-    def add_member(self):
-        """Додати учасника до вибраної команди."""
-        if not self.selected_team:
-            return
-        # Логіка додавання нового учасника через Team.add_player або схожі методи
-
-    def remove_member(self):
-        """Видалити учасника з вибраної команди."""
-        if not self.selected_team:
-            return
-        # Логіка видалення учасника
-
-    def view_team_info(self):
-        """Переглянути інформацію про команду."""
-        if not self.selected_team:
-            return
-        print(Team(self.selected_team["Training_Program_Name"]))
+    def draw_elements(self, elements):
+        """Рисует список элементов."""
+        for element in elements:
+            element.draw()
 
     def update(self):
-        """Основний цикл оновлення екрану."""
+        """Основной цикл обновления экрана."""
         fade_effect(self.SCREEN, duration=300, fade_in=True)
+        clock = pygame.time.Clock()
+        TARGET_FPS = 60
         while True:
             self.MENU_MOUSE_POS = pygame.mouse.get_pos()
 
-            # Отрисовка фона и элементов
             self.SCREEN.blit(self.BG, (0, 0))
             self.SCREEN.blit(self.TITLE_TEXT, self.TITLE_RECT)
 
-            # Відображення списку команд
-            for toggle_box in self.toggle_boxes:
-                toggle_box.draw()
+            self.draw_elements(self.toggle_boxes)  # Отрисовка переключателей команд
+            self.draw_elements(self.switch_buttons)  # Отрисовка переключателей категорий
 
-            # Центральний контейнер
+            if self.input_box_visible:
+                self.input_box.draw()
+                self.SAVE_NEW_TEAM_BUTTON.changeColor(self.MENU_MOUSE_POS)
+                self.SAVE_NEW_TEAM_BUTTON.update()
+            else:
+                for button in [self.ADD_TEAM_BUTTON, self.REMOVE_TEAM_BUTTON]:
+                    button.changeColor(self.MENU_MOUSE_POS)
+                    button.update()
+
             self.scrollable_container.update()
-
-            # Кнопки
-            for button in [self.ADD_MEMBER_BUTTON, self.REMOVE_MEMBER_BUTTON, self.VIEW_INFO_BUTTON,
-                           self.SAVE_BUTTON, self.CANCEL_BUTTON, self.GO_BACK_BUTTON]:
-                button.changeColor(self.MENU_MOUSE_POS)
-                button.update(self.SCREEN)
-
-            # Обробка подій
-            if self.event_handler():
-                break
+            self.event_handler()
 
             pygame.display.update()
-
+            clock.tick(TARGET_FPS)
 
 
 
@@ -261,9 +266,9 @@ class TournamentsMenu:
         self.TITLE_RECT = self.TITLE_TEXT.get_rect(topleft=(20, 20))
 
         # Инициализация кнопок
-        self.ADD_TOURNAMENT_BUTTON = Button(image=None, pos=(1400, 200), text_input="Додати турнір", font=get_font(50), base_color="White", hovering_color="Green")
-        self.DELETE_TOURNAMENT_BUTTON = Button(image=None, pos=(1400, 300), text_input="Видалити турнір", font=get_font(50), base_color="White", hovering_color="Green")
-        self.GO_BACK_BUTTON = Button(image=None, pos=(1100, 950), text_input="Повернутися", font=get_font(50), base_color="White", hovering_color="Green")
+        self.ADD_TOURNAMENT_BUTTON = Button(self.SCREEN, pos=(1400, 200), text_input="Додати турнір", font=get_font(50), base_color="White", hovering_color="Green")
+        self.DELETE_TOURNAMENT_BUTTON = Button(self.SCREEN, pos=(1400, 300), text_input="Видалити турнір", font=get_font(50), base_color="White", hovering_color="Green")
+        self.GO_BACK_BUTTON = Button(self.SCREEN, pos=(1100, 950), text_input="Повернутися", font=get_font(50), base_color="White", hovering_color="Green")
 
         # Пример данных для списка турниров
         self.tournaments_list = [
@@ -342,7 +347,7 @@ class PopupMenu(ABC):
         
         # Кнопка "повернутися"
         self.return_button = Button(
-            image=None,
+            self.SCREEN,
             pos=(self.x_pos + self.menu_width // 2, self.y_pos + self.menu_height - 50),
             text_input="Повернутися",
             font=pygame.font.Font(None, 40),
