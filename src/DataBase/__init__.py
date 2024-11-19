@@ -6,9 +6,9 @@ def create_connection():
         conn = psycopg2.connect(
             host='localhost',
             port='5432',
-            database='esportsmanager',
-            user='alex',
-            password='ayana1212'
+            database='esportmanager',
+            user='postgres',
+            password='qwe123'
         )
         return conn
     except OperationalError as e:

@@ -34,8 +34,10 @@ class Team:
         program_id = db.get_data('id', 'trainingprogram', program_name, 'name')
         db.update_data('team', 'training_program_id', get_team_id(team), 'id', program_id[0])
 
-    def add_sponsor(name, team):
-        pass
+    def add_sponsor(team, sponsor):
+        team_id = db.get_data('id', 'team', team, 'name')
+        sponsor_id = db.get_data('id', 'sponsor', sponsor, 'name')
+        db.add_data('team_sponsor', (sponsor_id, team_id))
 
     def change_team_player(old_nickname, new_nickname, team):
         player_id = db.get_data('id', 'player', old_nickname, 'nickname')
@@ -55,8 +57,12 @@ class Team:
         staff_id = db.get_data('id', 'staff', new_name, 'name')
         db.update_data('staff', 'team_id', get_team_id(team), 'id', staff_id[0])
 
-    def change_team_sponsor():
-        pass
+    def delete_sponsor(team, sponsor):
+        sponsor_id = db.get_data('id', 'sponsor', sponsor, 'name')[0]
+        db.delete_data('team_sponsor', ['sponsor_id', get_team_id(team), 'team_id', sponsor_id])
+
+    def show_sponsors(team):
+        return db.show_exception_tables('team_sponsor', 'sponsor', ['sponsor_id', 'team_id'], get_team_id(team))
 
     def list_of_teams():
         return db.show_data('Training_Program_Name', 'team', 'trainingprogram', 'training_program_id')

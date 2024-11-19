@@ -72,10 +72,10 @@ class dbUtils:
                 conn.close()
 
     def show_data(table_name, table1, table2, id_name):    
-        connection = create_connection()
-        if connection:
+        conn = create_connection()
+        if conn:
             try:
-                with connection.cursor() as cursor:
+                with conn.cursor() as cursor:
                     query = f"SELECT p.*, COALESCE(t.name, 'None') AS {table_name} FROM {table1} p LEFT JOIN {table2} t ON p.{id_name} = t.id;"
                     cursor.execute(query)
                     
@@ -89,14 +89,14 @@ class dbUtils:
             except Exception as e:
                     print(f"Error: {e}")
             finally:
-                connection.close()
+                conn.close()
         return None
     
     def show_table(table_name):
-        connection = create_connection()
-        if connection:
+        conn = create_connection()
+        if conn:
             try:
-                with connection.cursor() as cursor:
+                with conn.cursor() as cursor:
                     query = f"SELECT * FROM {table_name};"
                     cursor.execute(query)
                     
@@ -110,5 +110,26 @@ class dbUtils:
             except Exception as e:
                     print(f"Error: {e}")
             finally:
-                connection.close()
+                conn.close()
+        return None
+    
+    def show_exception_tables(table_name, table1, columns, id_name):
+        conn = create_connection()
+        if conn:
+            try:
+                with conn.cursor() as cursor:
+                    query = f"SELECT {table1}.id, {table1}.name FROM {table_name} JOIN {table1} ON {table_name}.{columns[1]} = {table1}.id WHERE {table_name}.{columns[0]} = {id_name};"
+                    cursor.execute(query)
+                    
+                    columns = [desc[0] for desc in cursor.description] 
+                    filtered_columns = [col for col in columns if 'id' not in col.lower()]
+                    results = [
+                        {col: value for col, value in zip(columns, row) if col in filtered_columns}
+                        for row in cursor.fetchall()
+                    ]
+                    return results
+            except Exception as e:
+                    print(f"Error: {e}")
+            finally:
+                conn.close()
         return None

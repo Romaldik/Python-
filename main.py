@@ -60,11 +60,32 @@ def delete_tournament():
     Tournament.delete_tournament('Major')
     print(Tournament.list_of_tournaments())
 
-def add_team_tournament():
+def add_tournament_team():
     Tournament.add_team('Major', 'Navi')
 
-def delete_team_tournament():
+def delete_tournament_team():
     Tournament.delete_team('Major', 'Navi')
+
+def show_tournament_team():
+    print(Tournament.show_tournament_teams('Major'))
+
+def add_tournament_sponsor():
+    Tournament.add_sponsor('Major', 'FavBet')
+
+def delete_tournament_sponsor():
+    Tournament.delete_sponsor('Major', 'FavBet')
+
+def show_tournament_sponsor():
+    print(Tournament.show_sponsors('Major'))
+
+def add_team_sponsor():
+    Team.add_sponsor('Navi', 'FavBet')
+
+def delete_team_sponsor():
+    Team.delete_sponsor('Navi', 'FavBet')
+
+def show_team_sponsor():
+    print(Team.show_sponsors('Navi'))
 
 if __name__ == "__main__":
     #create_training_program()
@@ -77,6 +98,11 @@ if __name__ == "__main__":
     #create_sponsor()
     #delete_sponsor()
     #create_tournament()
-    delete_tournament()
-    #add_team_tournament()
-    #delete_team_tournament()
+    #delete_tournament()
+    #add_tournament_team()
+    #delete_tournament_team()
+    #show_tournament_team()
+    #delete_tournament_sponsor()
+    #show_tournament_sponsor()
+    delete_team_sponsor()
+    show_team_sponsor()
