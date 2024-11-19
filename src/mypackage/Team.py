@@ -5,11 +5,20 @@ from .Sponsor import Sponsor
 def get_team_id(name):
     return db.get_data('id', 'team', name)[0]
 class Team:
-    def __init__(self, name, location, trining_prog, period_of_sponsorship):
+    def __init__(self, name="Невідомо", location="Невідомо", trining_prog=None, period_of_sponsorship=0):
+        """
+        Ініціалізація об'єкта.
+
+        :param name: Ім'я спонсора (рядок), за замовчуванням "Невідомо".
+        :param location: Локація (рядок), за замовчуванням "Невідомо".
+        :param trining_prog: Програма тренувань, за замовчуванням None.
+        :param period_of_sponsorship: Період спонсорства (ціле число), за замовчуванням 0.
+        """
         self.name = name
         self.location = location
-        self.trining_prog = trining_prog
+        self.trining_prog = trining_prog or []  # Якщо передано None, використовується порожній список
         self.period_of_sponsorship = period_of_sponsorship
+
 
     def create_team(self,):
         trining_prog_id = db.get_data('id', 'trainingProgram', self.trining_prog)

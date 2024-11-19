@@ -1,16 +1,19 @@
-from GUI.Screens.__init__ import pygame, sys, Button, ToggleButton, InputBox, Dropdown, Container, ScrollableContainer, Label, ToggleBox
+from ..Screens.__init__ import pygame, sys, Button, ToggleButton, InputBox, Dropdown, Container, ScrollableContainer, Label, ToggleBox
+from src.DataBase.db_utils import dbUtils as db
 from abc import ABC, abstractmethod
+from src.mypackage import *
 
 
 # Основной класс экрана
 class ScreenManager:
     def __init__(self, screen):
-        self.SCREEN = screen
-        self.screens = {}
-        self.current_screen = None
-
-    def add_screen(self, name, screen_class):
-        self.screens[name] = screen_class
+        self.screen = screen
+        self.screens = {
+            "main_menu": MainMenu(self.screen, self),
+            "teams_menu": TeamsMenu(self.screen, self),
+            "tournaments_menu": TournamentsMenu(self.screen, self)
+        }
+        self.current_screen = self.screens["main_menu"]
 
     def switch_to(self, name):
         self.current_screen = self.screens[name]
@@ -30,15 +33,39 @@ class MainMenu:
         # Загрузка фона и текста
         self.BG = pygame.image.load("assets/Background.png")
         self.MENU_TEXT = get_font(100).render("ГОЛОВНЕ МЕНЮ", True, "#b68f40")
-        self.MENU_RECT = self.MENU_TEXT.get_rect(center=(500, 100))
+        self.MENU_RECT = self.MENU_TEXT.get_rect(center=(self.SCREEN.get_width() // 2, 150))
+
+        # Центрирование кнопок
+        button_width, button_height = 400, 100
+        button_spacing = 50
+        center_x = self.SCREEN.get_width() // 2
+        start_y = 350
 
         # Инициализация кнопок
-        self.TEAMS_BUTTON = Button(image=pygame.image.load("assets/Teams Rect.png"), pos=(500, 350), 
-                                   text_input="Команди", font=get_font(75), base_color="#d7fcd4", hovering_color="White")
-        self.TOURNAMENTS_BUTTON = Button(image=pygame.image.load("assets/Tournaments Rect.png"), pos=(500, 550), 
-                                         text_input="Турнiри", font=get_font(75), base_color="#d7fcd4", hovering_color="White")
-        self.QUIT_BUTTON = Button(image=pygame.image.load("assets/Quit Rect.png"), pos=(500, 800), 
-                                  text_input="Вихiд", font=get_font(75), base_color="#d7fcd4", hovering_color="White")
+        self.TEAMS_BUTTON = Button(
+            image=None, 
+            pos=(center_x, start_y), 
+            text_input="Команди", 
+            font=get_font(75), 
+            base_color="#d7fcd4", 
+            hovering_color="White"
+        )
+        self.TOURNAMENTS_BUTTON = Button(
+            image=None, 
+            pos=(center_x, start_y + button_height + button_spacing), 
+            text_input="Турніри", 
+            font=get_font(75), 
+            base_color="#d7fcd4", 
+            hovering_color="White"
+        )
+        self.QUIT_BUTTON = Button(
+            image=None, 
+            pos=(center_x, start_y + 2 * (button_height + button_spacing)), 
+            text_input="Вихід", 
+            font=get_font(75), 
+            base_color="#d7fcd4", 
+            hovering_color="White"
+        )
 
     def update(self):
         fade_effect(self.SCREEN, duration=300, fade_in=True)
@@ -78,6 +105,7 @@ class MainMenu:
         return False
 
 
+
 # Меню команд
 class TeamsMenu:
     def __init__(self, screen, manager):
@@ -85,30 +113,28 @@ class TeamsMenu:
         self.manager = manager
         self.MENU_MOUSE_POS = pygame.mouse.get_pos()
 
-        # Загрузка фона и заголовка
         self.BG = pygame.image.load("assets/TeamsBackground.png")
         self.TITLE_TEXT = get_font(75).render("Команди", True, "White")
         self.TITLE_RECT = self.TITLE_TEXT.get_rect(topleft=(20, 20))
 
-        # Левая часть: список команд
-        self.teams = [Team(f"Команда {i + 1}") for i in range(5)]  # Пример списка команд
-        for i in self.teams:
-            for j in range(5):
-                i.recruit_member(Player(f"Player{j}", j + 10, "no", "her"))
-
-        self.toggle_boxes = [
-            ToggleBox(
-                self.SCREEN,  
-                (20, 120 + i * 60),  # Смещение по вертикали для каждого ToggleBox
-                (300, 40),  # Стандартный размер
-                team.name,
-                get_font(30),  # Шрифт для текста
-                base_color=(0, 0, 0, 128),  # Базовый цвет текста
-                hovering_color="Yellow",  # Цвет текста при активации
-                toggled_color ="Green"
-            ) 
-            for i, team in enumerate(self.teams)
-        ]
+        # Ліва частина вікна: Список команд
+        self.teams = Team.list_of_teams()  # Отримання списку команд з бази даних
+        if self.teams == None:
+            self.teams = []
+        else:
+            self.toggle_boxes = [
+                ToggleBox(
+                    self.SCREEN,
+                    (20, 120 + i * 60),
+                    (300, 40),
+                    team["Training_Program_Name"],
+                    get_font(30),
+                    base_color=(0, 0, 0, 128),
+                    hovering_color="White",
+                    toggled_color="Green",
+                )
+                for i, team in enumerate(self.teams)
+            ]
 
         self.selected_team = None
 
@@ -116,11 +142,11 @@ class TeamsMenu:
         self.scrollable_container = ScrollableContainer(self.SCREEN, (350, 120), (700, 600))
 
         # Правая часть: кнопки действий
-        self.ADD_MEMBER_BUTTON = Button(image=None, pos=(1100, 200), text_input="Додати члена", font=get_font(30),
+        self.ADD_MEMBER_BUTTON = Button(image=None, pos=(1300, 200), text_input="Додати члена", font=get_font(30),
                                         base_color="White", hovering_color="Green")
-        self.REMOVE_MEMBER_BUTTON = Button(image=None, pos=(1100, 300), text_input="Видалити члена", font=get_font(30),
+        self.REMOVE_MEMBER_BUTTON = Button(image=None, pos=(1300, 300), text_input="Видалити члена", font=get_font(30),
                                            base_color="White", hovering_color="Green")
-        self.VIEW_INFO_BUTTON = Button(image=None, pos=(1100, 400), text_input="Переглянути дані", font=get_font(30),
+        self.VIEW_INFO_BUTTON = Button(image=None, pos=(1300, 400), text_input="Переглянути дані", font=get_font(30),
                                        base_color="White", hovering_color="Green")
 
         # Нижняя часть: кнопки сохранения, отмены и возврата
@@ -132,15 +158,17 @@ class TeamsMenu:
                                      base_color="White", hovering_color="Green")
 
     def display_team_members(self):
-        """Обновить центральный контейнер, отобразив членов выбранной команды."""
+        """Обновити центральний контейнер для відображення членів вибраної команди."""
         self.scrollable_container.elements = []
         if self.selected_team:
-            for member in self.selected_team.members:
-                label = Label(self.SCREEN, str(member), pos=(0, 0), font=get_font(25), color="White")
+            team_id = self.selected_team["id"]
+            members = db.show_data("name, age, role", "player", "team", team_id)
+            for member in members:
+                label = Label(self.SCREEN, f"{member['name']} ({member['role']})", pos=(350, 120), font=get_font(25), color="White")
                 self.scrollable_container.add_element(label)
 
     def event_handler(self):
-        """Обработка событий."""
+        """Обробка подій."""
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 pygame.quit()
@@ -149,7 +177,7 @@ class TeamsMenu:
             # Прокрутка контейнера
             self.scrollable_container.handle_event(event)
 
-            # Логика для выбора команды
+            # Логіка для вибору команди
             for toggle_box, team in zip(self.toggle_boxes, self.teams):
                 toggle_box.handle_event(event)
                 if toggle_box.is_selected:
@@ -162,19 +190,34 @@ class TeamsMenu:
                     self.manager.switch_to("main_menu")
                     return True
                 if self.ADD_MEMBER_BUTTON.checkForInput(self.MENU_MOUSE_POS) and self.selected_team:
-                    # Логика добавления члена
-                    pass
+                    self.add_member()
                 if self.REMOVE_MEMBER_BUTTON.checkForInput(self.MENU_MOUSE_POS) and self.selected_team:
-                    # Логика удаления члена
-                    pass
+                    self.remove_member()
                 if self.VIEW_INFO_BUTTON.checkForInput(self.MENU_MOUSE_POS) and self.selected_team:
-                    # Логика просмотра данных команды
-                    pass
+                    self.view_team_info()
 
         return False
 
+    def add_member(self):
+        """Додати учасника до вибраної команди."""
+        if not self.selected_team:
+            return
+        # Логіка додавання нового учасника через Team.add_player або схожі методи
+
+    def remove_member(self):
+        """Видалити учасника з вибраної команди."""
+        if not self.selected_team:
+            return
+        # Логіка видалення учасника
+
+    def view_team_info(self):
+        """Переглянути інформацію про команду."""
+        if not self.selected_team:
+            return
+        print(Team(self.selected_team["Training_Program_Name"]))
+
     def update(self):
-        """Основной цикл обновления экрана."""
+        """Основний цикл оновлення екрану."""
         fade_effect(self.SCREEN, duration=300, fade_in=True)
         while True:
             self.MENU_MOUSE_POS = pygame.mouse.get_pos()
@@ -183,11 +226,11 @@ class TeamsMenu:
             self.SCREEN.blit(self.BG, (0, 0))
             self.SCREEN.blit(self.TITLE_TEXT, self.TITLE_RECT)
 
-            # Отображение списка команд
+            # Відображення списку команд
             for toggle_box in self.toggle_boxes:
                 toggle_box.draw()
 
-            # Центральный контейнер
+            # Центральний контейнер
             self.scrollable_container.update()
 
             # Кнопки
@@ -196,11 +239,12 @@ class TeamsMenu:
                 button.changeColor(self.MENU_MOUSE_POS)
                 button.update(self.SCREEN)
 
-            # Обработка событий
+            # Обробка подій
             if self.event_handler():
                 break
 
             pygame.display.update()
+
 
 
 
