@@ -1,0 +1,31 @@
+{
+    "button": {
+        "font": "default",
+        "font_size": 22,
+        "background_colour": "#444444CC",
+        "border_width": 2,
+        "border_colour": "#FFA500",
+        "normal_text": "#FFFFFF",
+        "hovered_text": "#FFA500",
+        "hovered_border": "#FFFFFF",
+        "hovered_background": "#666666CC",
+        "disabled_text": "#AAAAAA",
+        "disabled_background": "#222222CC"
+    },
+    "scroll_bar": {
+        "background_colour": "#222222CC",
+        "sliding_colour": "#555555CC",
+        "border_width": 1,
+        "border_colour": "#FFA500"
+    },
+    "panel": {
+        "background_colour": "#333333CC",
+        "border_width": 0
+    },
+    "label": {
+        "font": "default",
+        "font_size": 24,
+        "text_colour": "#FFA500",
+        "background_colour": "#00000000"
+    }
+}
