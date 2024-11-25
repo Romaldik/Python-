@@ -132,8 +132,7 @@ class ScreenManager:
             })
 
         def team_data_update():
-            #team_data.clear()
-            team_data = Team.list_of_teams()
+            team_data[:] = Team.list_of_teams()
             for team in team_data:
                 team.update({
                     "players_list": Team.show_team_players(team["name"]) or [],
@@ -212,8 +211,10 @@ class ScreenManager:
                     if team:
                         # Заполняем список участников для активной вкладки
                         list_containers[tab_key].set_item_list(
-                            [member["name"] for member in team.get(tab_key + "_list", [])]
+                            [member["name"] for member in team.get(f"{tab_key}_list", [])]
                         )
+                        print(f"Tab: {tab_key}, Members: {team.get(f'{tab_key}_list', [])}")
+
 
         # Функция для обновления центрального контейнера
         def update_center_container(team_name):
@@ -305,6 +306,7 @@ class ScreenManager:
 
                                     # Обновляем данные и интерфейс
                                     team_data_update()
+                                    update_center_container(selected_team)
 
                             dialog_window.kill()
                             dialog_active = False
