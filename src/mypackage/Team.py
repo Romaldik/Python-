@@ -3,7 +3,8 @@ from .TeamMember import Player, Coach, Staff
 from .Sponsor import Sponsor
 
 def get_team_id(name):
-    return db.get_data('id', 'team', name, 'name')[0]
+    result = db.get_data('id', 'team', name, 'name')
+    return result
 class Team:
     def __init__(self, name, location, period_of_sponsorship):
         self.name = name
@@ -65,7 +66,13 @@ class Team:
         return db.show_exception_tables('team_sponsor', 'sponsor', ['sponsor_id', 'team_id'], get_team_id(team))
     
     def show_team_players(team):
-        return db.show_team_member(get_team_id(team))
+        return db.show_team_member(get_team_id(team), "player")
+    
+    def show_team_coach(team):
+        return db.show_team_member(get_team_id(team), "coach")
+    
+    def show_team_staff(team):
+        return db.show_team_member(get_team_id(team), "staff")
 
     def list_of_teams():
         return db.show_data('Training_Program_Name', 'team', 'trainingprogram', 'training_program_id')

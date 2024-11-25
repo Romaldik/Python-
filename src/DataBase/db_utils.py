@@ -134,12 +134,12 @@ class dbUtils:
                 conn.close()
         return None
     
-    def show_team_member(id):
+    def show_team_member(id, member_type):
         conn = create_connection()
         if conn:
             try:
                 with conn.cursor() as cursor:
-                    query_players = f' SELECT name, nickname, age, role FROM player WHERE team_id = {id};'
+                    query_players = f' SELECT name, nickname, age, role FROM {member_type} WHERE team_id = {id};'
 
                     cursor.execute(query_players)
                     players = cursor.fetchall()
