@@ -115,26 +115,27 @@ class ScreenManager:
 
     def teams_menu_screen(self):
         """Меню команд."""
+        # Основное окно
         window = UIPanel(
             pygame.Rect((0, 0), self.screen.get_size()),
             manager=self.ui_manager,
             object_id="#teams_menu_panel"
         )
 
+        # Словарь данных для всех команд
+        team_data = {
+            "Команда 1": {"Игроки": ["Арта", "Миномёт", "Танк"], "Коучи": ["Скуф"], "Стаф": ["Рекламный агент"], "Спонсоры": ["Офис Президента"]},
+            "Команда 2": {"Игроки": ["Шмыг"], "Коучи": [], "Стаф": [], "Спонсоры": []},
+            "Команда 3": {"Игроки": [], "Коучи": [], "Стаф": [], "Спонсоры": []},
+        }
+
         # Левый контейнер со списком команд
         selection_list = UISelectionList(
             relative_rect=pygame.Rect((20, 20), (200, self.screen.get_height() - 100)),
-            item_list=["Команда 1", "Команда 2", "Команда 3"],
+            item_list=list(team_data.keys()),
             manager=self.ui_manager,
             container=window
         )
-
-        # Словарь данных для всех команд
-        team_data = {
-            "Команда 1": {"Игроки": ["арта", "миномёт", "танк"], "Коучи": ["скуф"], "Стаф": ["реклам агент"], "Спонсоры": ["офис президента"]},
-            "Команда 2": {"Игроки": ["шмыг"], "Коучи": [], "Стаф": [], "Спонсоры": []},
-            "Команда 3": {"Игроки": [], "Коучи": [], "Стаф": [], "Спонсоры": []},
-        }
 
         # Центральный контейнер для списков
         center_container = UIPanel(
@@ -145,7 +146,7 @@ class ScreenManager:
             object_id="#center_container"
         )
 
-        # Переключатели
+        # Кнопки вкладок
         tab_buttons = ["Игроки", "Коучи", "Стаф", "Спонсоры"]
         tabs = {}
         for i, tab in enumerate(tab_buttons):
@@ -157,21 +158,21 @@ class ScreenManager:
             )
             tabs[btn] = tab
 
-        # Контейнеры для каждого списка
+        # Контейнеры списков для участников
         list_containers = {}
         for tab_name in tab_buttons:
-            list_container = UISelectionList(
-                relative_rect=pygame.Rect((10, 60), (520, 360)),
+            list_containers[tab_name] = UISelectionList(
+                relative_rect=pygame.Rect((10, 60), (520, center_container.rect.height - 140)),
                 item_list=[],
                 manager=self.ui_manager,
                 container=center_container,
                 visible=False
             )
-            list_containers[tab_name] = list_container
 
-        active_tab = None
+        active_tab = "Игроки"
         selected_team = None
 
+        # Функция для переключения вкладок
         def switch_tab(tab_name):
             nonlocal active_tab
             if active_tab:
@@ -181,6 +182,7 @@ class ScreenManager:
             if selected_team:
                 list_containers[active_tab].set_item_list(team_data[selected_team][tab_name])
 
+        # Функция для обновления центрального контейнера
         def update_center_container(team_name):
             nonlocal selected_team
             selected_team = team_name
@@ -190,16 +192,95 @@ class ScreenManager:
             else:
                 center_container.hide()
 
+        # Диалог добавления/редактирования участника
+        def show_add_edit_member_dialog(member_type, existing_member_name=None):
+
+            dialog_window0 = UIPanel(
+                pygame.Rect((self.screen.get_width() // 2 - 150, self.screen.get_height() // 2 - 120), (300, 200)),
+                manager=self.ui_manager,
+                starting_height=2,
+                object_id="#dialog_panel0"
+            )
+
+            UILabel(
+                relative_rect=pygame.Rect((10, 10), (280, 30)),
+                text=f"Введите имя {member_type}:",
+                manager=self.ui_manager,
+                container=dialog_window0
+            )
+
+            input_field = pygame_gui.elements.UITextEntryLine(
+                relative_rect=pygame.Rect((10, 50), (280, 30)),
+                manager=self.ui_manager,
+                container=dialog_window0
+            )
+            if existing_member_name:
+                input_field.set_text(existing_member_name)
+
+            cancel_button = UIButton(
+                relative_rect=pygame.Rect((30, 150), (100, 40)),
+                text="Отмена",
+                manager=self.ui_manager,
+                container=dialog_window0
+            )
+            OK_button = UIButton(
+                relative_rect=pygame.Rect((170, 150), (100, 40)),
+                text="ОК",
+                manager=self.ui_manager,
+                container=dialog_window0
+            )
+
+            dialog_active = True
+            clock = pygame.time.Clock()
+
+            while dialog_active:
+                time_delta = clock.tick(60) / 1000.0
+                for event in pygame.event.get():
+                    if event.type == pygame.QUIT:
+                        pygame.quit()
+                        exit()
+                    self.ui_manager.process_events(event)
+
+                    if event.type == pygame_gui.UI_BUTTON_PRESSED:
+                        if event.ui_element == cancel_button:
+                            dialog_window0.kill()
+                            dialog_active = False
+                        elif event.ui_element == OK_button:
+                            new_name = input_field.get_text()
+                            if new_name:
+                                if existing_member_name:
+                                    member_list = team_data[selected_team][member_type]
+                                    member_list[member_list.index(existing_member_name)] = new_name
+                                else:
+                                    team_data[selected_team][member_type].append(new_name)
+                                dialog_window0.kill()
+                                dialog_active = False
+                                switch_tab(member_type)
+                                break
+
+                self.ui_manager.update(time_delta)
+                self.screen.fill((0, 0, 0))
+                self.ui_manager.draw_ui(self.screen)
+                pygame.display.update()
+
+        # Кнопки управления участниками
+        def delete_selected_member():
+            if active_tab and selected_team:
+                selected_item = list_containers[active_tab].get_single_selection()
+                if selected_item:
+                    team_data[selected_team][active_tab].remove(selected_item)
+                    switch_tab(active_tab)
+
         # Диалог добавления команды
         def show_add_team_dialog():
-            # Создаём окно диалога
+            """Отображает диалог для добавления новой команды."""
             dialog_window = UIPanel(
-                pygame.Rect((self.screen.get_width() // 2 - 150, self.screen.get_height() // 2 - 100), (300, 200)),
+                pygame.Rect((self.screen.get_width() // 2 - 150, self.screen.get_height() // 2 - 80), (300, 200)),
                 manager=self.ui_manager,
+                starting_height=1,
                 object_id="#dialog_panel"
             )
 
-            # Текстовая метка
             UILabel(
                 relative_rect=pygame.Rect((10, 10), (280, 30)),
                 text="Введите название команды:",
@@ -207,30 +288,28 @@ class ScreenManager:
                 container=dialog_window
             )
 
-            # Поле ввода текста
             input_field = pygame_gui.elements.UITextEntryLine(
                 relative_rect=pygame.Rect((10, 50), (280, 30)),
                 manager=self.ui_manager,
                 container=dialog_window
             )
 
-            # Кнопки управления
             cancel_button = UIButton(
                 relative_rect=pygame.Rect((30, 150), (100, 40)),
-                text="Відмінити",
+                text="Отмена",
                 manager=self.ui_manager,
                 container=dialog_window,
                 object_id="#cancel_button"
             )
-            ok_button = UIButton(
+
+            OK_button = UIButton(
                 relative_rect=pygame.Rect((170, 150), (100, 40)),
-                text="Ок",
+                text="ОК",
                 manager=self.ui_manager,
                 container=dialog_window,
                 object_id="#ok_button"
             )
 
-            # Локальный цикл для обработки событий диалога
             dialog_active = True
             clock = pygame.time.Clock()
 
@@ -245,75 +324,76 @@ class ScreenManager:
 
                     if event.type == pygame_gui.UI_BUTTON_PRESSED:
                         if event.ui_element == cancel_button:
+                            dialog_window.kill()
                             dialog_active = False
-                        elif event.ui_element == ok_button:
+                        elif event.ui_element == OK_button:
                             new_team_name = input_field.get_text()
                             if new_team_name:
-                                # Обновляем список через метод
+                                # Добавляем новую команду в список
                                 selection_list.add_items([new_team_name])
-                                team_data[new_team_name] = {tab: [] for tab in tab_buttons}
-
+                                team_data[new_team_name] = {tab: [] for tab in ["Игроки", "Коучи", "Стаф", "Спонсоры"]}
+                            dialog_window.kill()
                             dialog_active = False
+                            break
 
-
-                # Обновляем UI-менеджер
                 self.ui_manager.update(time_delta)
-
-                # Рисуем интерфейс
                 self.screen.fill((0, 0, 0))  # Заливка фона чёрным
                 self.ui_manager.draw_ui(self.screen)
                 pygame.display.update()
 
-            # Уничтожаем окно диалога после завершения
-            dialog_window.kill()
+        # Удаление выбранной команды
+        def remove_selected_team(team_name):
+            """Удаляет выбранную команду."""
+            if team_name:
+                selection_list.remove_items([team_name])  # Удаляем из интерфейса
+                del team_data[team_name]  # Удаляем из данных
+                update_center_container(None)  # Обновляем центральный контейнер
 
-
-        # Кнопки внизу
+        # Кнопки
         button_mapping = {}
-        bottom_buttons = [
-            {"text": "+", "action": show_add_team_dialog},
-            {
-                "text": "-",
-                "action": lambda: remove_selected_team(selection_list.get_single_selection())
-            }
+
+        team_buttons = [
+            {"text": "+", "action": lambda: show_add_team_dialog()},
+            {"text": "-", "action": lambda: remove_selected_team(selection_list.get_single_selection())}
         ]
 
-        for i, btn_data in enumerate(bottom_buttons):
+        for i, btn_data in enumerate(team_buttons):
             btn = UIButton(
                 relative_rect=pygame.Rect((20 + i * 60, self.screen.get_height() - 70), (50, 50)),
                 text=btn_data["text"],
                 manager=self.ui_manager,
                 container=window
             )
-            button_mapping[btn] = btn_data
+            button_mapping[btn] = btn_data["action"]
 
-        # Логика удаления команды
-        def remove_selected_team(team_name):
-            if team_name:
-                selection_list.remove_items(team_name)
-                del team_data[team_name]
-                update_center_container(None)
+        center_bottom_buttons = [
+            {"text": "Добавить", "action": lambda: show_add_edit_member_dialog(active_tab)},
+            {"text": "Редактировать", "action": lambda: show_add_edit_member_dialog(active_tab)},
+            {"text": "Удалить", "action": lambda: delete_selected_member()},
+            {"text": "Назад", "action": lambda: self.switch_to("main_menu")}
+        ]
 
-        # Обработка событий
+        for i, btn_data in enumerate(center_bottom_buttons):
+            btn = UIButton(
+                relative_rect=pygame.Rect((10 + i * 130, center_container.rect.height - 60), (120, 40)),
+                text=btn_data["text"],
+                manager=self.ui_manager,
+                container=center_container
+            )
+            button_mapping[btn] = btn_data["action"]
+
         def handle_event(event):
-            nonlocal active_tab
-            if event.type == pygame_gui.UI_BUTTON_PRESSED:
-                # Обработка нижних кнопок
-                user_data = button_mapping.get(event.ui_element)
-                if user_data and "action" in user_data:
-                    dialog_event = user_data["action"]()
-                    if dialog_event:
-                        handle_event(dialog_event)
-                # Обработка переключателей
+            if event.type == pygame_gui.UI_SELECTION_LIST_NEW_SELECTION and event.ui_element == selection_list:
+                update_center_container(selection_list.get_single_selection())
+            elif event.type == pygame_gui.UI_BUTTON_PRESSED:
+                action = button_mapping.get(event.ui_element)
+                if action:
+                    action()
                 if event.ui_element in tabs:
                     switch_tab(tabs[event.ui_element])
 
-            elif event.type == pygame_gui.UI_SELECTION_LIST_NEW_SELECTION:
-                # Выделение команды из списка
-                if event.ui_element == selection_list:
-                    update_center_container(selection_list.get_single_selection())
-
         return {"window": window, "handle_event": handle_event, "render_background": None}
+
 
     def tournaments_menu_screen(self):
         """Меню турниров."""
@@ -358,6 +438,6 @@ class ScreenManager:
 
 if __name__ == "__main__":
     pygame.init()
-    screen = pygame.display.set_mode((1920, 1080))
+    screen = pygame.display.set_mode((1040, 786))
     app = ScreenManager(screen)
     app.run()
