@@ -1,6 +1,6 @@
 import pygame
 import pygame_gui
-from pygame_gui.elements import UIButton, UILabel, UIPanel, UISelectionList, UITextEntryLine
+from pygame_gui.elements import UIAutoResizingContainer, UIButton, UILabel, UIPanel, UISelectionList, UITextEntryLine
 import sys
 
 
@@ -195,24 +195,23 @@ class ScreenManager:
         # Диалог добавления/редактирования участника
         def show_add_edit_member_dialog(member_type, existing_member_name=None):
 
-            dialog_window0 = UIPanel(
+            dialog_window = UIPanel(
                 pygame.Rect((self.screen.get_width() // 2 - 150, self.screen.get_height() // 2 - 120), (300, 200)),
                 manager=self.ui_manager,
                 starting_height=2,
-                object_id="#dialog_panel0"
             )
 
             UILabel(
                 relative_rect=pygame.Rect((10, 10), (280, 30)),
                 text=f"Введите имя {member_type}:",
                 manager=self.ui_manager,
-                container=dialog_window0
+                container=dialog_window
             )
 
             input_field = pygame_gui.elements.UITextEntryLine(
                 relative_rect=pygame.Rect((10, 50), (280, 30)),
                 manager=self.ui_manager,
-                container=dialog_window0
+                container=dialog_window
             )
             if existing_member_name:
                 input_field.set_text(existing_member_name)
@@ -221,13 +220,13 @@ class ScreenManager:
                 relative_rect=pygame.Rect((30, 150), (100, 40)),
                 text="Отмена",
                 manager=self.ui_manager,
-                container=dialog_window0
+                container=dialog_window
             )
             OK_button = UIButton(
                 relative_rect=pygame.Rect((170, 150), (100, 40)),
                 text="ОК",
                 manager=self.ui_manager,
-                container=dialog_window0
+                container=dialog_window
             )
 
             dialog_active = True
@@ -243,7 +242,7 @@ class ScreenManager:
 
                     if event.type == pygame_gui.UI_BUTTON_PRESSED:
                         if event.ui_element == cancel_button:
-                            dialog_window0.kill()
+                            dialog_window.kill()
                             dialog_active = False
                         elif event.ui_element == OK_button:
                             new_name = input_field.get_text()
@@ -253,10 +252,9 @@ class ScreenManager:
                                     member_list[member_list.index(existing_member_name)] = new_name
                                 else:
                                     team_data[selected_team][member_type].append(new_name)
-                                dialog_window0.kill()
+                                dialog_window.kill()
                                 dialog_active = False
                                 switch_tab(member_type)
-                                break
 
                 self.ui_manager.update(time_delta)
                 self.screen.fill((0, 0, 0))
@@ -277,8 +275,7 @@ class ScreenManager:
             dialog_window = UIPanel(
                 pygame.Rect((self.screen.get_width() // 2 - 150, self.screen.get_height() // 2 - 80), (300, 200)),
                 manager=self.ui_manager,
-                starting_height=1,
-                object_id="#dialog_panel"
+                starting_height=2
             )
 
             UILabel(
@@ -334,7 +331,6 @@ class ScreenManager:
                                 team_data[new_team_name] = {tab: [] for tab in ["Игроки", "Коучи", "Стаф", "Спонсоры"]}
                             dialog_window.kill()
                             dialog_active = False
-                            break
 
                 self.ui_manager.update(time_delta)
                 self.screen.fill((0, 0, 0))  # Заливка фона чёрным
@@ -353,7 +349,7 @@ class ScreenManager:
         button_mapping = {}
 
         team_buttons = [
-            {"text": "+", "action": lambda: show_add_team_dialog()},
+            {"text": "+", "action": show_add_team_dialog},
             {"text": "-", "action": lambda: remove_selected_team(selection_list.get_single_selection())}
         ]
 
@@ -368,7 +364,17 @@ class ScreenManager:
 
         center_bottom_buttons = [
             {"text": "Добавить", "action": lambda: show_add_edit_member_dialog(active_tab)},
-            {"text": "Редактировать", "action": lambda: show_add_edit_member_dialog(active_tab)},
+            {
+                "text": "Редактировать",
+                "action": lambda: (
+                    show_add_edit_member_dialog(
+                        active_tab, 
+                        list_containers[active_tab].get_single_selection()  # Получение имени выбранного участника
+                    )
+                    if active_tab and selected_team and list_containers[active_tab].get_single_selection() 
+                    else None
+                )
+            },
             {"text": "Удалить", "action": lambda: delete_selected_member()},
             {"text": "Назад", "action": lambda: self.switch_to("main_menu")}
         ]
@@ -383,37 +389,135 @@ class ScreenManager:
             button_mapping[btn] = btn_data["action"]
 
         def handle_event(event):
-            if event.type == pygame_gui.UI_SELECTION_LIST_NEW_SELECTION and event.ui_element == selection_list:
-                update_center_container(selection_list.get_single_selection())
-            elif event.type == pygame_gui.UI_BUTTON_PRESSED:
+            if event.type == pygame_gui.UI_BUTTON_PRESSED:
                 action = button_mapping.get(event.ui_element)
                 if action:
                     action()
                 if event.ui_element in tabs:
                     switch_tab(tabs[event.ui_element])
+            elif event.type == pygame_gui.UI_SELECTION_LIST_NEW_SELECTION:
+                # Проверка, какой список сгенерировал событие
+                if event.ui_element == selection_list:
+                    selected_item = selection_list.get_single_selection()
+                    if selected_item:
+                        update_center_container(selected_item)
 
         return {"window": window, "handle_event": handle_event, "render_background": None}
 
-
     def tournaments_menu_screen(self):
-        """Меню турниров."""
+        """Меню турнірів."""
         window = UIPanel(
             pygame.Rect((0, 0), self.screen.get_size()),
             manager=self.ui_manager,
             object_id="#tournaments_menu_panel"
         )
 
+        # Список турнірів за замовчуванням
+        tournament_data = {
+            "Турнір 1": "Інформація про Турнір 1: дата, місце проведення, учасники...",
+            "Турнір 2": "Інформація про Турнір 2: дата, місце проведення, учасники...",
+            "Турнір 3": "Інформація про Турнір 3: дата, місце проведення, учасники..."
+        }
+
         selection_list = UISelectionList(
             relative_rect=pygame.Rect((20, 20), (200, self.screen.get_height() - 100)),
-            item_list=["Турнир 1", "Турнир 2", "Турнир 3"],
+            item_list=list(tournament_data.keys()),  # Використовуємо тільки назви турнірів
             manager=self.ui_manager,
             container=window
         )
 
+        # Панель для відображення інформації про вибраний турнір
+        info_panel = UIPanel(
+            pygame.Rect((240, 20), (self.screen.get_width() - 260, self.screen.get_height() - 100)),
+            manager=self.ui_manager,
+            container=window
+        )
+
+        info_label = UILabel(
+            relative_rect=pygame.Rect((10, 10), (info_panel.rect.width - 20, info_panel.rect.height - 20)),
+            text="Виберіть турнір для перегляду інформації.",
+            manager=self.ui_manager,
+            container=info_panel
+        )
+
         button_mapping = {}
+
+        def show_add_tournament_dialog():
+            """Открывает диалог для добавления нового турнира."""
+            dialog_window = UIPanel(
+                pygame.Rect((self.screen.get_width() // 2 - 150, self.screen.get_height() // 2 - 100), (300, 200)),
+                manager=self.ui_manager,
+                starting_height=2,
+                object_id="#dialog_panel"
+            )
+
+            UILabel(
+                relative_rect=pygame.Rect((10, 10), (280, 30)),
+                text="Введите имя турнира:",
+                manager=self.ui_manager,
+                container=dialog_window
+            )
+
+            input_field = pygame_gui.elements.UITextEntryLine(
+                relative_rect=pygame.Rect((10, 50), (280, 30)),
+                manager=self.ui_manager,
+                container=dialog_window
+            )
+
+            cancel_button = UIButton(
+                relative_rect=pygame.Rect((30, 150), (100, 40)),
+                text="Отмена",
+                manager=self.ui_manager,
+                container=dialog_window
+            )
+
+            ok_button = UIButton(
+                relative_rect=pygame.Rect((170, 150), (100, 40)),
+                text="ОК",
+                manager=self.ui_manager,
+                container=dialog_window
+            )
+
+            dialog_active = True
+            clock = pygame.time.Clock()
+
+            while dialog_active:
+                time_delta = clock.tick(60) / 1000.0
+                for event in pygame.event.get():
+                    if event.type == pygame.QUIT:
+                        pygame.quit()
+                        exit()
+                    self.ui_manager.process_events(event)
+                    if event.type == pygame_gui.UI_BUTTON_PRESSED:
+                        if event.ui_element == cancel_button:
+                            dialog_window.kill()
+                            dialog_active = False
+                        elif event.ui_element == ok_button:
+                            new_tournament_name = input_field.get_text()
+                            if new_tournament_name:
+                                tournament_data[new_tournament_name] = f"Информация о {new_tournament_name}..."
+                                selection_list.add_items([new_tournament_name])
+                                info_label.set_text(f"Турнир {new_tournament_name} добавлен.")
+                            dialog_window.kill()
+                            dialog_active = False
+
+                self.ui_manager.update(time_delta)
+                self.screen.fill((0, 0, 0))
+                self.ui_manager.draw_ui(self.screen)
+                pygame.display.update()
+
+        def remove_tournament():
+            """Функция для удаления выбранного турнира."""
+            selected_tournament = selection_list.get_single_selection()
+            if selected_tournament:
+                del tournament_data[selected_tournament]
+                selection_list.remove_items(selected_tournament)
+                info_label.set_text(f"Турнир {selected_tournament} удалён.")
+
         bottom_buttons = [
-            {"text": "Добавить", "action": lambda: selection_list.add_item(f"Турнир {len(selection_list.item_list) + 1}")},
-            {"text": "Удалить", "action": lambda: selection_list.remove_item(selection_list.get_single_selection())}
+            {"text": "Добавить", "action": show_add_tournament_dialog},
+            {"text": "Удалить", "action": remove_tournament},
+            {"text": "Назад", "action": lambda: self.switch_to("main_menu")}
         ]
 
         for i, btn_data in enumerate(bottom_buttons):
@@ -428,7 +532,11 @@ class ScreenManager:
             button_mapping[btn] = btn_data
 
         def handle_event(event):
-            if event.type == pygame_gui.UI_BUTTON_PRESSED:
+            if event.type == pygame_gui.UI_SELECTION_LIST_NEW_SELECTION and event.ui_element == selection_list:
+                selected_tournament = selection_list.get_single_selection()
+                if selected_tournament:
+                    info_label.set_text(tournament_data[selected_tournament])
+            elif event.type == pygame_gui.UI_BUTTON_PRESSED:
                 user_data = button_mapping.get(event.ui_element)
                 if user_data and "action" in user_data:
                     user_data["action"]()
