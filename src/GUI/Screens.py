@@ -210,6 +210,7 @@ class ScreenManager:
                 list_containers[tab_key].show()
                 if selected_team:
                     team = get_team_by_name(selected_team)
+                    print(team)
                     if team:
                         # Заполняем список участников для активной вкладки
                         list_containers[tab_key].set_item_list(
@@ -298,9 +299,12 @@ class ScreenManager:
                                         elif active_tab == "staff":
                                             team.change_team_staff(selected_member, new_member_name, selected_team)
                                     else:
-                                        # Добавление нового члена
+                                        # Добавление нового члена   
+                                        print("hujnaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa")
                                         if active_tab == "player":
+                                            print("ааааааааааааа")
                                             team.add_player(new_member_name, selected_team)
+                                            print("FFFFFFFFFFFFF")
                                         elif active_tab == "coach":
                                             team.add_coach(new_member_name, selected_team)
                                         elif active_tab == "staff":
