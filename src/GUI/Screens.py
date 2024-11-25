@@ -202,6 +202,8 @@ class ScreenManager:
 
         # Функция для переключения вкладок
         def switch_tab(tab_key):
+            active_tab = tab_key
+            print(active_tab)
             for key, list_container in list_containers.items():
                 list_container.hide()
             if tab_key in list_containers:
@@ -456,9 +458,10 @@ class ScreenManager:
 
         def handle_event(event):
             nonlocal dialog_handler, is_dialog_active
-            if is_dialog_active():
+
+            if is_dialog_active():  # Если активен диалог, обрабатываем его
                 dialog_handler(event)
-            else:
+            else:  # Иначе обрабатываем другие события
                 if event.type == pygame_gui.UI_BUTTON_PRESSED:
                     action = button_mapping.get(event.ui_element)
                     if action:
@@ -466,10 +469,21 @@ class ScreenManager:
                             dialog_handler, is_dialog_active = show_add_team_dialog()
                         else:
                             action()
+                    else:
+                        # Проверяем, нажата ли одна из кнопок вкладок
+                        for i, tab_button in enumerate(tabs):
+                            if event.ui_element == tab_button:
+                                # Переключаемся на вкладку по индексу
+                                tab_key = list(tab_mapping.values())[i]
+                                switch_tab(tab_key)
+                                break
+
                 elif event.type == pygame_gui.UI_SELECTION_LIST_NEW_SELECTION:
+                    # Обработка выбора команды
                     selected_item = selection_list.get_single_selection()
                     if selected_item:
                         update_center_container(selected_item)
+
 
         return {"window": window, "handle_event": handle_event, "render_background": None}
     
