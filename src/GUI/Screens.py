@@ -132,6 +132,7 @@ class ScreenManager:
             })
 
         def team_data_update():
+            #team_data.clear()
             team_data = Team.list_of_teams()
             for team in team_data:
                 team.update({
@@ -224,21 +225,17 @@ class ScreenManager:
             else:
                 center_container.hide()
 
-        # Диалог добавления/редактирования участника
-        def show_add_edit_member_dialog(member_type, existing_member_name=None):
-            team = get_team_by_name(selected_team)
-            if not team:
-                return
-
+        def show_add_edit_member_dialog(active_tab, selected_member=None):
+            """Диалог для добавления или редактирования члена команды."""
             dialog_window = UIPanel(
-                pygame.Rect((self.screen.get_width() // 2 - 150, self.screen.get_height() // 2 - 120), (300, 200)),
+                pygame.Rect((self.screen.get_width() // 2 - 150, self.screen.get_height() // 2 - 120), (300, 240)),
                 manager=self.ui_manager,
-                starting_height=2,
+                starting_height=2
             )
 
             UILabel(
                 relative_rect=pygame.Rect((10, 10), (280, 30)),
-                text=f"Введите имя {member_type}:",
+                text=f"Введите имя {active_tab}:",
                 manager=self.ui_manager,
                 container=dialog_window
             )
@@ -248,38 +245,75 @@ class ScreenManager:
                 manager=self.ui_manager,
                 container=dialog_window
             )
-            if existing_member_name:
-                input_field.set_text(existing_member_name)
 
-            def save_member():
-                new_name = input_field.get_text()
-                if new_name:
-                    if existing_member_name:
-                        member = get_member_by_name(team, member_type, existing_member_name)
-                        if member:
-                            member["name"] = new_name
-                    else:
-                        team[f"{member_type}_list"].append({"name": new_name})
-                    dialog_window.kill()
-                    switch_tab(member_type)
+            # Если редактируем, заполняем поле текущим именем
+            if selected_member:
+                input_field.set_text(selected_member)
 
-            UIButton(
-                relative_rect=pygame.Rect((30, 150), (100, 40)),
+            cancel_button = UIButton(
+                relative_rect=pygame.Rect((30, 180), (100, 40)),
                 text="Отмена",
                 manager=self.ui_manager,
-                container=dialog_window,
-                object_id="#cancel_button"
-            ).set_on_click_callback(lambda: dialog_window.kill())
+                container=dialog_window
+            )
 
-            UIButton(
-                relative_rect=pygame.Rect((170, 150), (100, 40)),
+            ok_button = UIButton(
+                relative_rect=pygame.Rect((170, 180), (100, 40)),
                 text="ОК",
                 manager=self.ui_manager,
-                container=dialog_window,
-                object_id="#ok_button"
-            ).set_on_click_callback(save_member)
+                container=dialog_window
+            )
 
-        # Удаление выбранного участника
+            dialog_active = True
+            clock = pygame.time.Clock()
+
+            while dialog_active:
+                time_delta = clock.tick(60) / 1000.0
+                for event in pygame.event.get():
+                    if event.type == pygame.QUIT:
+                        pygame.quit()
+                        exit()
+
+                    self.ui_manager.process_events(event)
+
+                    if event.type == pygame_gui.UI_BUTTON_PRESSED:
+                        if event.ui_element == cancel_button:
+                            dialog_window.kill()
+                            dialog_active = False
+
+                        if event.ui_element == ok_button:
+                            new_member_name = input_field.get_text().strip()
+                            if new_member_name:
+                                if selected_team:
+                                    team = Team(selected_team, None, None)
+                                    if selected_member:
+                                        # Редактирование члена
+                                        if active_tab == "player":
+                                            team.change_team_player(selected_member, new_member_name, selected_team)
+                                        elif active_tab == "coach":
+                                            team.change_team_coach(selected_member, new_member_name, selected_team)
+                                        elif active_tab == "staff":
+                                            team.change_team_staff(selected_member, new_member_name, selected_team)
+                                    else:
+                                        # Добавление нового члена
+                                        if active_tab == "player":
+                                            team.add_player(new_member_name, selected_team)
+                                        elif active_tab == "coach":
+                                            team.add_coach(new_member_name, selected_team)
+                                        elif active_tab == "staff":
+                                            team.add_staff(new_member_name, selected_team)
+
+                                    # Обновляем данные и интерфейс
+                                    team_data_update()
+
+                            dialog_window.kill()
+                            dialog_active = False
+
+                self.ui_manager.update(time_delta)
+                self.screen.fill((0, 0, 0))  # Заливка фона чёрным
+                self.ui_manager.draw_ui(self.screen)
+                pygame.display.update()
+                
         def delete_selected_member():
             if not active_tab or not selected_team:
                 return
@@ -345,6 +379,7 @@ class ScreenManager:
                             # Создаём новую команду
                             team = Team(name=new_team_name, location="Unknown", period_of_sponsorship="unknown amount of days")
                             team.create_team()
+                            team_data_update()
                             
                             # Обновляем интерфейс
                             selection_list.add_items([new_team_name])
@@ -387,9 +422,9 @@ class ScreenManager:
             button_mapping[btn] = btn_data["action"]
 
         center_bottom_buttons = [
-            {"text": "Добавить", "action": lambda: show_add_edit_member_dialog(active_tab)},
+            {"text": "Додати", "action": lambda: show_add_edit_member_dialog(active_tab)},
             {
-                "text": "Редактировать",
+                "text": "Редагувати",
                 "action": lambda: (
                     show_add_edit_member_dialog(
                         active_tab, 
@@ -399,8 +434,8 @@ class ScreenManager:
                     else None
                 )
             },
-            {"text": "Удалить", "action": lambda: delete_selected_member()},
-            {"text": "Назад", "action": lambda: self.switch_to("main_menu")}
+            {"text": "Видалити", "action": lambda: delete_selected_member()},
+            {"text": "Повернутися", "action": lambda: self.switch_to("main_menu")}
         ]
 
         for i, btn_data in enumerate(center_bottom_buttons):

@@ -5,7 +5,7 @@ class Sponsor:
         self.name = name
 
     def create_sponsor(self):
-        db.add_data('sponsor', (self.name,))
+        db.add_data('sponsor', (self.name))
 
     @staticmethod
     def delete_sponsor(name):
